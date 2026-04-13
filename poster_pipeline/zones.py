@@ -200,26 +200,26 @@ def build_zones(
 
     # "像素占用"机制：按 style_def 顺序处理 zone，每个 zone 自动去掉
     # 已被前置 zone 占用的像素，从根本上消除跨 zone 文字重叠。
-    # 例如 frame(top→left→right→bottom)：top 占满顶带后，
-    # left 自动变成"顶带以下"，bottom 自动变成"两侧之间的底带"。
+    # 注意：只有通过质量检测、真正被使用的 zone 才占用像素；
+    # 质量不达标的 zone 不占用像素，留给后续 zone 或 fallback 使用。
     claimed = np.zeros((h, w), dtype=bool)
 
     for zone_name, direction in style_def:
         zm = _build_zone_mask(zone_name, h, w, sy0, sy1, sx0, sx1, forb_mask)
-        zm = zm & ~claimed        # 去除已被前序 zone 占用的像素
-        claimed |= zm             # 标记本 zone 像素为已占用
+        zm = zm & ~claimed        # 去除已被前序（已采用）zone 的像素
 
         if not zm.any():
             continue
 
         area_ratio = zm.sum() / (h * w)
         if area_ratio < min_area_ratio:
-            continue   # zone 太小
+            continue   # zone 太小，不占用
 
         quality = _zone_quality(complexity, zm)
         if quality < min_quality:
-            continue   # zone 太复杂（树枝等）
+            continue   # zone 太复杂，不占用，留给后续 zone
 
+        claimed |= zm             # 确认采用，才标记为已占用
         result.append((zone_name, zm, direction, quality))
 
     return result

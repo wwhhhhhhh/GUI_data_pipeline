@@ -1,40 +1,97 @@
 {
-  "style": "v_columns",
-  "zones": [
-    {
-      "name": "left_tall",
-      "direction": "v",
-      "quality": 0.739
-    },
-    {
-      "name": "right_tall",
-      "direction": "v",
-      "quality": 0.761
-    }
+  "layout_style": "v_right",
+  "complexity_thresh": 0.5,
+  "writable_ratio": 0.499,
+  "n_lines": 6,
+  "font_px_used": 48,
+  "fg_rgb": [
+    248,
+    250,
+    252
   ],
-  "n_lines": 2,
+  "bg_median_rgb": [
+    141,
+    143,
+    142
+  ],
   "lines": [
-    {
-      "y": 6,
-      "x0": 0,
-      "x1": 33,
-      "text": "华为智慧生活影像旗舰极",
-      "direction": "v",
-      "align": "left",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 33
-    },
     {
       "y": 6,
       "x0": 592,
       "x1": 640,
       "text": "华为智慧生活影",
       "direction": "v",
-      "align": "left",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 80,
+      "x0": 530,
+      "x1": 578,
+      "text": "华为智慧生活",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 108,
+      "x0": 468,
+      "x1": 516,
+      "text": "华为智慧生",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 257,
+      "x0": 158,
+      "x1": 206,
+      "text": "华为",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 131,
+      "x0": 96,
+      "x1": 144,
+      "text": "华为智慧生",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 129,
+      "x0": 34,
+      "x1": 82,
+      "text": "华为智慧生",
+      "direction": "v",
+      "align": "right",
       "fg": [
         248,
         250,
@@ -42,15 +99,5 @@
       ],
       "font_px": 48
     }
-  ],
-  "fg_rgb": [
-    248,
-    250,
-    252
-  ],
-  "bg_median_rgb": [
-    152,
-    157,
-    158
   ]
 }

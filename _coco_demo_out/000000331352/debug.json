@@ -1,51 +1,89 @@
 {
-  "style": "bot_banner",
-  "zones": [
-    {
-      "name": "bot_wide",
-      "direction": "h",
-      "quality": 0.751
-    }
-  ],
-  "n_lines": 2,
-  "lines": [
-    {
-      "y": 350,
-      "x0": 6,
-      "x1": 345,
-      "text": "华为智慧生活",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 56
-    },
-    {
-      "y": 420,
-      "x0": 6,
-      "x1": 345,
-      "text": "影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 56
-    }
-  ],
+  "layout_style": "v_right",
+  "complexity_thresh": 0.5,
+  "writable_ratio": 0.58,
+  "n_lines": 5,
+  "font_px_used": 43,
   "fg_rgb": [
     248,
     250,
     252
   ],
   "bg_median_rgb": [
-    129,
-    120,
-    83
+    174,
+    171,
+    135
+  ],
+  "lines": [
+    {
+      "y": 30,
+      "x0": 308,
+      "x1": 351,
+      "text": "华为",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    },
+    {
+      "y": 6,
+      "x0": 253,
+      "x1": 296,
+      "text": "华为智慧",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    },
+    {
+      "y": 66,
+      "x0": 198,
+      "x1": 241,
+      "text": "华为智慧生活影像",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    },
+    {
+      "y": 78,
+      "x0": 143,
+      "x1": 186,
+      "text": "华为智慧生活影像",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    },
+    {
+      "y": 178,
+      "x0": 88,
+      "x1": 131,
+      "text": "华为智",
+      "direction": "v",
+      "align": "right",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    }
   ]
 }

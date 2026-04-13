@@ -31,18 +31,18 @@ SUBJECT_LABELS = {
 FONT_PATH = "/System/Library/Fonts/STHeiti Medium.ttc"
 FONT_PX = 56
 
-# 10 张图循环使用多种海报风格（含复合 zone 样式）
+# 10 张图循环使用多种布局风格（对应 layout_scanline.STYLES）
 STYLE_CYCLE = [
-    "top_title",    # 上标题 + 下副标
-    "sidebar_r",    # 顶部横排 + 右侧竖列
-    "top_banner",   # 顶部全幅大标题（top_left+top+top_right 合并）
-    "h_banner",     # 上下全幅横排
-    "v_columns",    # 左右全高竖排（left_tall+right_tall）
-    "l_shape_r",    # 宽顶 + 右竖（Γ 形）
-    "frame_wide",   # 全边框宽幅
-    "diag_wide",    # 左上+右下宽对角
-    "sidebar_l",    # 顶部横排 + 左侧竖列
-    "bot_banner",   # 底部全幅横排
+    "h_top",      # 横排，优先顶部
+    "h_bottom",   # 横排，优先底部
+    "h_top",      # 横排，优先顶部（重复，凑 10 张）
+    "h_center",   # 横排，居中区域
+    "v_right",    # 竖排，从右侧开始
+    "v_left",     # 竖排，从左侧开始
+    "surround",   # 环绕：上半区横排 + 下半区横排
+    "h_bottom",   # 横排，优先底部
+    "h_center",   # 横排，居中区域
+    "v_right",    # 竖排，从右侧开始
 ]
 
 
@@ -121,7 +121,8 @@ def main():
                 font_px=FONT_PX,
                 layout_style=style,
                 dilate_iter=14,
-                min_zone_quality=0.30,
+                complexity_thresh=0.50,
+                min_area_ratio=0.04,
             )
         except Exception as e:
             import traceback
@@ -135,20 +136,28 @@ def main():
         Image.fromarray(rgb).save(out_sub / "image.png")
         Image.fromarray(result["preview"]).save(out_sub / "preview.png")
 
-        wb = result.get("writable_binary")
+        # ── writable_mask：非主体可用区域（白=可写，黑=禁区） ──────────────
+        wb = result.get("writable")
         if wb is not None:
             Image.fromarray((wb.astype(np.uint8) * 255)).save(out_sub / "writable_mask.png")
 
+        # ── quality_map：区域复杂度（白=低复杂/适合写字，黑=高复杂/不适合） ──
         comp = result.get("complexity")
         if comp is not None:
-            c_vis = ((1 - comp) * 255).astype(np.uint8)  # 白=低复杂度=好
+            c_vis = ((1 - comp) * 255).astype(np.uint8)
             Image.fromarray(c_vis).save(out_sub / "quality_map.png")
+
+            # writable 区域叠加复杂度：只看非主体区域的质量分布
+            if wb is not None:
+                masked = (c_vis.astype(np.float32) * wb).astype(np.uint8)
+                Image.fromarray(masked).save(out_sub / "quality_writable.png")
 
         save_debug_json(out_sub / "debug.json", result["debug"])
 
-        zones_info = result["debug"].get("zones", [])
         n_lines = result["debug"].get("n_lines", 0)
-        print(f"  zones={[z['name'] for z in zones_info]}  lines={n_lines}  -> {out_sub}")
+        writable_ratio = result["debug"].get("writable_ratio", 0)
+        skip = result["debug"].get("skip_reason", "")
+        print(f"  writable={writable_ratio:.1%}  lines={n_lines}  {('skip: '+skip) if skip else ''}-> {out_sub}")
 
     print(f"\n完成，输出目录: {OUT_DIR}")
 

@@ -94,42 +94,70 @@ def dilate_binary(mask: np.ndarray, iterations: int = 3) -> np.ndarray:
 def complexity_map(
     rgb: np.ndarray,
     *,
-    blur_r: int = 8,
-    lap_win: int = 5,
+    smooth_sigma: float = 0.0,   # 0 = 自动（图像短边的 1/8）
+    lap_win: int = 21,            # 拉普拉斯窗口，比之前 5 大，捕捉更宽纹理
 ) -> np.ndarray:
+    """
+    计算全图区域级复杂度，值域 [0, 1]。
+
+    核心思路：
+      1. Sobel 梯度幅值 + 大半径高斯平滑（sigma ≈ 图像短边 /8，约 40~80px）
+         → 将边缘能量扩散到区域尺度
+      2. Laplacian 能量 + 同样的大平滑
+         → 捕捉纹理密度
+      3. 加权融合 → 归一化
+
+    效果：天空/地板等大片低纹理区 → 接近 0（适合写字）
+          工具台/树枝等密集纹理区 → 接近 1（不适合写字）
+    """
+    h, w = rgb.shape[:2]
+    # 平滑半径自适应图像尺寸：短边 1/8，最小 20px，最大 80px
+    sigma = smooth_sigma if smooth_sigma > 0 else float(
+        max(20, min(80, min(h, w) // 8))
+    )
+
     gray = rgb_to_gray(rgb)
+
+    # Sobel 梯度 → 大高斯平滑
     gmag = _sobel_mag(gray)
-    gmag = _box_blur(gmag, blur_r)
+    gmag_s = _ndi.gaussian_filter(gmag, sigma=sigma)
+
+    # Laplacian 能量 → 大高斯平滑（lap_win 比之前大，覆盖更多纹理）
     lap = _lap_energy(gray, win=lap_win)
-    c = _normalize01(gmag) * 0.6 + _normalize01(lap) * 0.4
-    return np.clip(c, 0.0, 1.0)
+    lap_s = _ndi.gaussian_filter(lap, sigma=sigma)
+
+    c = _normalize01(gmag_s) * 0.6 + _normalize01(lap_s) * 0.4
+    return np.clip(c, 0.0, 1.0).astype(np.float32)
 
 
-def build_writable_score(
+def build_writable(
     rgb: np.ndarray,
-    subject_union: np.ndarray,
+    masks: List[dict],
     *,
-    dilate_iter: int = 12,
-    complexity_gamma: float = 0.0,
-) -> Tuple[np.ndarray, np.ndarray]:
+    h: int,
+    w: int,
+    forbid_labels: Optional[set] = None,
+    label_key: str = "label",
+    dilate_iter: int = 14,
+    complexity_thresh: float = 0.50,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
+    一步计算最终可写字掩码及复杂度图。
+
+    流程：
+      1. 合并主体 mask → 形态学膨胀 → 主体禁区 forb
+      2. 计算区域级复杂度图 comp（大高斯平滑，sigma≈短边/8）
+      3. 可写区域 = (~forb) & (comp <= complexity_thresh)
+         若 masks 为空，forb 全为 False，可写区域仅由复杂度决定。
+
     Returns:
-      score: float32 HxW in [0,1],越大越适合写字
-      complexity: float32 HxW in [0,1]
-
-    complexity_gamma=0 表示完全不考虑图像复杂度，score = 1(自由区) / 0(主体禁区)。
-    dilate_iter 越大，主体周围留白越多，文字越不会贴边。
+      writable  : bool HxW，True = 可写字
+      comp      : float32 HxW [0,1]，0=低复杂/适合写字，1=高复杂/不适合
+      subj_mask : bool HxW，True = 主体区域（膨胀前）
     """
-    forb = dilate_binary(subject_union, iterations=dilate_iter)
+    subj = union_subject_masks(masks, h=h, w=w,
+                               forbid_labels=forbid_labels, label_key=label_key)
+    forb = dilate_binary(subj, iterations=dilate_iter)
     comp = complexity_map(rgb)
-    free = (~forb).astype(np.float32)
-    if complexity_gamma == 0.0:
-        score = free
-    else:
-        score = free * (1.0 - comp) ** complexity_gamma
-    return score.astype(np.float32), comp.astype(np.float32)
-
-
-def threshold_writable(score: np.ndarray, quantile: float = 0.65) -> np.ndarray:
-    thr = float(np.quantile(score.reshape(-1), quantile))
-    return score >= thr
+    writable = (~forb) & (comp <= complexity_thresh)
+    return writable, comp, subj

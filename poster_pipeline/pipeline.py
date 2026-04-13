@@ -1,13 +1,11 @@
-"""端到端骨架：图 + 分割 masks → Zone 分区 → 排版 → 预览图。
+"""
+海报排版 pipeline（简化版）
 
 流程：
-  1. union_subject_masks  → 主体合并
-  2. dilate_binary        → 主体禁区扩展
-  3. complexity_map       → 全图复杂度（0=低频/天空, 1=高频/树枝）
-  4. build_zones          → 按 style + 复杂度选出可用分区（支持复合 zone）
-  5. plan_layout          → 每个 zone 独立排版槽位
-  6. fill_slots           → 每个 zone 独立填入完整语料（非连通区域各自写字）
-  7. render_lines         → 统一渲染
+  1. build_writable  → 非主体掩码 ∩ 低复杂度掩码 = 可写字区域
+  2. plan_layout     → 在可写区域内按布局风格找槽位
+  3. fill_slots      → 填入语料
+  4. render_lines    → 渲染
 """
 from __future__ import annotations
 
@@ -18,9 +16,21 @@ from typing import Any, Dict, List, Optional
 import numpy as np
 
 from .color_contrast import contrast_text_rgb
-from .layout_scanline import draw_lines, fill_slots, plan_layout, render_lines, scanline_wrap
-from .writable_mask import complexity_map, dilate_binary, union_subject_masks
-from .zones import STYLE_NAMES, build_zones_with_fallback
+from .layout_scanline import fill_slots, plan_layout, render_lines, STYLES
+from .writable_mask import build_writable, complexity_map
+
+
+# 布局风格 → 文字对齐方式
+_ALIGN = {
+    "h_top":    "center",
+    "h_bottom": "center",
+    "h_center": "center",
+    "v_right":  "right",
+    "v_left":   "left",
+    "surround":  "center",
+}
+
+LAYOUT_STYLES = STYLES   # 对外暴露，供调用方查询可用风格
 
 
 def run_poster_pipeline(
@@ -31,124 +41,95 @@ def run_poster_pipeline(
     corpus_text: str = "示例标题 用于合成数据海报排版",
     font_path: Optional[str] = None,
     font_px: int = 48,
-    layout_style: str = "top_title",
+    layout_style: str = "h_top",
     dilate_iter: int = 14,
-    min_zone_quality: float = 0.30,
+    complexity_thresh: float = 0.50,
+    min_area_ratio: float = 0.04,
 ) -> Dict[str, Any]:
     """
     参数：
-      rgb            — HxWx3 uint8 图像
-      masks          — [{"mask": bool HxW, "label": str}, ...]
-      subject_labels — 需要避开的 label 集合；None 表示全部 mask 都避开
-      corpus_text    — 空格分隔的词组，将被分配到各 zone
-      font_px        — 字号（像素）
-      layout_style   — 排版风格，见 zones.STYLE_NAMES
-      dilate_iter    — 主体禁区膨胀半径（像素），越大留白越多
-      min_zone_quality — zone 质量下限，低于此跳过（0~1，0=不过滤）
+      rgb               — HxWx3 uint8 图像
+      masks             — [{"mask": bool HxW, "label": str}, ...]
+      subject_labels    — 需要避开的类别集合；None 表示全部 mask 都避开
+      corpus_text       — 空格分隔的词组
+      font_px           — 目标字号（像素），会自适应图像尺寸压缩
+      layout_style      — 布局风格：h_top / h_bottom / h_center / v_right / v_left / surround
+      dilate_iter       — 主体禁区膨胀半径（像素）
+      complexity_thresh — 复杂度阈值（0~1），低于此的像素视为可写字
+      min_area_ratio    — 可写区域面积下限（占全图比例），低于此直接跳过
+
+    Returns dict:
+      preview   — 渲染结果 ndarray
+      lines     — List[TextLine]
+      writable  — bool HxW 可写字掩码
+      complexity— float32 HxW 复杂度图
+      debug     — 调试信息
     """
     h, w = rgb.shape[:2]
 
-    # ── 1. 主体禁区 ──────────────────────────────────────────────────────────
-    subj = union_subject_masks(
-        masks, h=h, w=w,
+    # ── 1. 可写字区域 = 非主体 ∩ 低复杂度 ──────────────────────────────
+    writable, comp, subj_mask = build_writable(
+        rgb, masks,
+        h=h, w=w,
         forbid_labels=subject_labels,
         label_key="label",
-    )
-    forb = dilate_binary(subj, iterations=dilate_iter)
-
-    # ── 2. 复杂度图（用于 zone 质量评分） ──────────────────────────────────
-    comp = complexity_map(rgb)
-
-    # ── 3. Zone 分区 ─────────────────────────────────────────────────────────
-    # bbox 用未膨胀的 subj 定义（zone 边界贴近主体原始轮廓），
-    # 像素可写性仍由 forb（已膨胀）决定
-    zones = build_zones_with_fallback(
-        h, w, forb, comp, layout_style,
-        raw_subj_mask=subj,
-        min_quality=min_zone_quality,
+        dilate_iter=dilate_iter,
+        complexity_thresh=complexity_thresh,
     )
 
+    writable_ratio = float(writable.sum()) / (h * w)
     debug: Dict[str, Any] = {
-        "style": layout_style,
-        "zones": [
-            {"name": name, "direction": direction, "quality": round(quality, 3)}
-            for name, _, direction, quality in zones
-        ],
+        "layout_style":     layout_style,
+        "complexity_thresh": complexity_thresh,
+        "writable_ratio":   round(writable_ratio, 3),
     }
 
-    if not zones:
-        return {"debug": debug, "preview": rgb, "lines": [], "writable_binary": ~forb}
+    # ── 2. 面积过小则跳过 ────────────────────────────────────────────────
+    if writable_ratio < min_area_ratio:
+        debug["skip_reason"] = "writable area too small"
+        debug["n_lines"] = 0
+        return {"debug": debug, "preview": rgb, "lines": [],
+                "writable": writable, "complexity": comp, "subj_mask": subj_mask}
 
-    # ── 4. 每 zone 独立排版 ──────────────────────────────────────────────────
-    # · 各 zone 独立获得完整语料、独立颜色
-    # · 按 quality 排名决定字号层次（最优 zone 全字号，其余 70%）
-    # · max_slots 随 zone 数量缩减，避免多 zone 时文字过密
-    # · 字号下限：max(24px, 图像短边 4%)，上限：图像高度 1/8
+    # ── 3. 自适应字号：不超过图像短边的 1/8，最小 24px ─────────────────
+    font_px_used = max(24, min(font_px, min(h, w) // 8))
 
-    ranked = sorted(range(len(zones)), key=lambda i: -zones[i][3])
-    n_zones = len(zones)
-    min_font = max(24, int(min(rgb.shape[:2]) * 0.04))
-    font_px_primary   = max(min_font, min(font_px, rgb.shape[0] // 8))
-    font_px_secondary = max(min_font, int(font_px_primary * 0.70))
-    # zone 越多，每个 zone 的槽位越少，避免文字铺满全图
-    max_slots_per_zone = max(2, 6 // max(1, n_zones))
+    # ── 4. 排版规划：在可写掩码内按风格找槽位 ───────────────────────────
+    slots = plan_layout(writable, font_px_used, style=layout_style)
+    if not slots:
+        debug["skip_reason"] = "no valid slots"
+        debug["n_lines"] = 0
+        return {"debug": debug, "preview": rgb, "lines": [],
+                "writable": writable, "complexity": comp, "subj_mask": subj_mask}
 
-    all_lines = []
+    # ── 5. 文字颜色（从可写区域采样背景色） ─────────────────────────────
+    fr, fg_v, fb, br, bg_v, bb = contrast_text_rgb(rgb, writable)
+    zone_fg = (fr, fg_v, fb)
+    align = _ALIGN.get(layout_style, "center")
 
-    for i, (zone_name, zone_mask, direction, quality) in enumerate(zones):
-        zone_font = font_px_primary if (ranked.index(i) == 0) else font_px_secondary
+    # ── 6. 文本填充 ──────────────────────────────────────────────────────
+    lines = fill_slots(
+        slots, corpus_text,
+        font_path=font_path, font_px=font_px_used,
+        align=align, fg=zone_fg,
+    )
 
-        # ── 4a. 每 zone 独立文字颜色 ──────────────────────────────────────
-        zfr, zfg, zfb, *_ = contrast_text_rgb(rgb, zone_mask)
-        zone_fg = (zfr, zfg, zfb)
+    # ── 7. 渲染 ──────────────────────────────────────────────────────────
+    preview = render_lines(rgb, lines, font_path=font_path)
 
-        # ── 4b. 水平对齐：侧边竖列左/右对齐，顶底区居中 ──────────────────
-        if direction == "v":
-            align = "left"   # 竖排时 align 无水平效果
-        elif zone_name in {"right", "right_tall", "top_right", "bot_right"}:
-            align = "right"
-        elif zone_name in {"left", "left_tall", "top_left", "bot_left"}:
-            align = "left"
-        else:
-            align = "center"  # top/bottom/wide/half/full → 居中
-
-        # ── 4c. 横排子风格（决定从顶还是从底开始放槽位） ─────────────────
-        if direction == "v":
-            plan_style = "v_right" if "right" in zone_name else "v_left"
-        else:
-            plan_style = "h_bottom" if ("bot" in zone_name or "bottom" in zone_name) else "h_top"
-
-        # 竖排每个 zone 只取 1 列（多列会重复相同文字，视觉混乱）
-        effective_max_slots = 1 if direction == "v" else max_slots_per_zone
-        slots = plan_layout(
-            zone_mask, zone_font,
-            style=plan_style,
-            max_slots=effective_max_slots,
-        )
-        lines = fill_slots(
-            slots, corpus_text,
-            font_path=font_path, font_px=zone_font,
-            align=align, fg=zone_fg,
-        )
-        all_lines.extend(lines)
-
-    # ── 5. 渲染（各行颜色/字号已存在 TextLine 内，直接渲染） ────────────────
-    preview = render_lines(rgb, all_lines, font_path=font_path)
-
-    # debug 信息：取最优 zone 的颜色作代表
-    best_mask = zones[ranked[0]][1]
-    fr, fg_c, fb, br, bg_c, bb = contrast_text_rgb(rgb, best_mask)
-    debug["n_lines"] = len(all_lines)
-    debug["lines"] = [asdict(x) for x in all_lines]
-    debug["fg_rgb"] = [fr, fg_c, fb]
-    debug["bg_median_rgb"] = [br, bg_c, bb]
+    debug["n_lines"]        = len(lines)
+    debug["font_px_used"]   = font_px_used
+    debug["fg_rgb"]         = list(zone_fg)
+    debug["bg_median_rgb"]  = [br, bg_v, bb]
+    debug["lines"]          = [asdict(x) for x in lines]
 
     return {
-        "debug": debug,
-        "preview": preview,
-        "lines": all_lines,
-        "writable_binary": ~forb,
+        "debug":      debug,
+        "preview":    preview,
+        "lines":      lines,
+        "writable":   writable,
         "complexity": comp,
+        "subj_mask":  subj_mask,
     }
 
 
