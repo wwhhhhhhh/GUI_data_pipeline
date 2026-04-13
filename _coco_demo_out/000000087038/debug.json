@@ -1,0 +1,70 @@
+{
+  "style": "h_banner",
+  "zones": [
+    {
+      "name": "top_wide",
+      "direction": "h",
+      "quality": 0.857
+    },
+    {
+      "name": "bot_wide",
+      "direction": "h",
+      "quality": 0.848
+    }
+  ],
+  "n_lines": 3,
+  "lines": [
+    {
+      "y": 0,
+      "x0": 6,
+      "x1": 634,
+      "text": "华为智慧生活影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 70,
+      "x0": 6,
+      "x1": 634,
+      "text": "极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 384,
+      "x0": 6,
+      "x1": 634,
+      "text": "华为智慧生活影像旗舰极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 39
+    }
+  ],
+  "fg_rgb": [
+    20,
+    24,
+    28
+  ],
+  "bg_median_rgb": [
+    239,
+    239,
+    240
+  ]
+}

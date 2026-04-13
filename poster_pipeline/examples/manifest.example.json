@@ -1,0 +1,21 @@
+{
+  "description": "本地实例清单：每张图一条记录，parser 按你的 SAM3 导出格式改写",
+  "items": [
+    {
+      "id": "001",
+      "image": "/data/posters/raw/001.jpg",
+      "masks": [
+        {
+          "label": "person",
+          "mask_png": "/data/posters/sam3/001_person.png"
+        },
+        {
+          "label": "sky",
+          "mask_png": "/data/posters/sam3/001_sky.png"
+        }
+      ],
+      "forbid_labels": ["person", "animal", "product_subject"],
+      "corpus_text_file": "/data/posters/corpus/001.txt"
+    }
+  ]
+}

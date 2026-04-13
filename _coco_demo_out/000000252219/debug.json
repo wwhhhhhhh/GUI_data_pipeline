@@ -1,0 +1,51 @@
+{
+  "style": "top_banner",
+  "zones": [
+    {
+      "name": "top_wide",
+      "direction": "h",
+      "quality": 0.78
+    }
+  ],
+  "n_lines": 2,
+  "lines": [
+    {
+      "y": 0,
+      "x0": 6,
+      "x1": 634,
+      "text": "华为智慧生活影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 53
+    },
+    {
+      "y": 66,
+      "x0": 6,
+      "x1": 634,
+      "text": "极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 53
+    }
+  ],
+  "fg_rgb": [
+    248,
+    250,
+    252
+  ],
+  "bg_median_rgb": [
+    10,
+    85,
+    118
+  ]
+}

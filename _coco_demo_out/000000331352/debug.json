@@ -1,0 +1,51 @@
+{
+  "style": "bot_banner",
+  "zones": [
+    {
+      "name": "bot_wide",
+      "direction": "h",
+      "quality": 0.751
+    }
+  ],
+  "n_lines": 2,
+  "lines": [
+    {
+      "y": 350,
+      "x0": 6,
+      "x1": 345,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 420,
+      "x0": 6,
+      "x1": 345,
+      "text": "影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 56
+    }
+  ],
+  "fg_rgb": [
+    248,
+    250,
+    252
+  ],
+  "bg_median_rgb": [
+    129,
+    120,
+    83
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "style": "diag_wide",
+  "zones": [
+    {
+      "name": "top_half_l",
+      "direction": "h",
+      "quality": 0.577
+    },
+    {
+      "name": "bot_half_r",
+      "direction": "h",
+      "quality": 0.863
+    }
+  ],
+  "n_lines": 3,
+  "lines": [
+    {
+      "y": 0,
+      "x0": 6,
+      "x1": 369,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 39
+    },
+    {
+      "y": 48,
+      "x0": 6,
+      "x1": 369,
+      "text": "影像旗舰极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 39
+    },
+    {
+      "y": 420,
+      "x0": 6,
+      "x1": 369,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 56
+    }
+  ],
+  "fg_rgb": [
+    20,
+    24,
+    28
+  ],
+  "bg_median_rgb": [
+    230,
+    225,
+    234
+  ]
+}

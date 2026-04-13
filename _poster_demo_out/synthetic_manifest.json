@@ -1,0 +1,10 @@
+{
+  "image": "/Users/wuwenhao/Desktop/huawei/text_rendering_data/GUI_pipepine/_poster_demo_out/image.png",
+  "masks": [
+    {
+      "label": "subject",
+      "png": "/Users/wuwenhao/Desktop/huawei/text_rendering_data/GUI_pipepine/_poster_demo_out/subject_mask.png"
+    }
+  ],
+  "note": "真实 SAM3 请替换 masks 为多实例 JSON/npy，并在 pipeline 中映射 subject_labels"
+}
