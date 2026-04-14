@@ -4,8 +4,16 @@
   "comp_dilate_iter": 6,
   "writable_ratio": 0.483,
   "strategy": "top_bottom",
-  "n_lines": 3,
-  "font_px_base": 56,
+  "n_lines": 6,
+  "font_px_base": 28,
+  "font_px_min": 24,
+  "font_levels": [
+    64,
+    48,
+    40,
+    32,
+    24
+  ],
   "zones": [
     {
       "position": "bottom",
@@ -13,7 +21,6 @@
       "align": "center",
       "scan_style": "h_bottom",
       "score": 0.1607,
-      "font_scale": 1.0,
       "bbox": [
         345,
         511,
@@ -27,7 +34,6 @@
       "align": "center",
       "scan_style": "h_top",
       "score": 0.1479,
-      "font_scale": 0.72,
       "bbox": [
         0,
         178,
@@ -38,10 +44,10 @@
   ],
   "lines": [
     {
-      "y": 420,
-      "x0": 74,
-      "x1": 634,
-      "text": "华为智慧生活影像旗舰",
+      "y": 384,
+      "x0": 443,
+      "x1": 616,
+      "text": "华为",
       "direction": "h",
       "align": "center",
       "fg": [
@@ -49,13 +55,41 @@
         250,
         252
       ],
-      "font_px": 56
+      "font_px": 64
+    },
+    {
+      "y": 459,
+      "x0": 45,
+      "x1": 634,
+      "text": "智慧生活影像旗舰极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 48
     },
     {
       "y": 0,
       "x0": 6,
-      "x1": 487,
-      "text": "华为智慧生活影像旗舰",
+      "x1": 483,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 48
+    },
+    {
+      "y": 56,
+      "x0": 49,
+      "x1": 439,
+      "text": "影像旗舰极致性能",
       "direction": "h",
       "align": "center",
       "fg": [
@@ -66,9 +100,23 @@
       "font_px": 40
     },
     {
-      "y": 50,
-      "x0": 45,
-      "x1": 444,
+      "y": 103,
+      "x0": 69,
+      "x1": 414,
+      "text": "华为智慧生活影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 32
+    },
+    {
+      "y": 140,
+      "x0": 85,
+      "x1": 404,
       "text": "极致性能",
       "direction": "h",
       "align": "center",
@@ -77,7 +125,7 @@
         24,
         28
       ],
-      "font_px": 40
+      "font_px": 24
     }
   ]
 }

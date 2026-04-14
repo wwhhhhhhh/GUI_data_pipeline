@@ -5,7 +5,15 @@
   "writable_ratio": 0.528,
   "strategy": "bottom_only",
   "n_lines": 2,
-  "font_px_base": 48,
+  "font_px_base": 28,
+  "font_px_min": 24,
+  "font_levels": [
+    64,
+    48,
+    40,
+    32,
+    24
+  ],
   "zones": [
     {
       "position": "bottom",
@@ -13,7 +21,6 @@
       "align": "center",
       "scan_style": "h_bottom",
       "score": 0.2443,
-      "font_scale": 1.0,
       "bbox": [
         225,
         388,
@@ -35,12 +42,12 @@
         250,
         252
       ],
-      "font_px": 48
+      "font_px": 64
     },
     {
-      "y": 300,
+      "y": 315,
       "x0": 6,
-      "x1": 288,
+      "x1": 297,
       "text": "智慧生活",
       "direction": "h",
       "align": "center",

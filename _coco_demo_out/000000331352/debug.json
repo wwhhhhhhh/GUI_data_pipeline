@@ -4,8 +4,16 @@
   "comp_dilate_iter": 6,
   "writable_ratio": 0.631,
   "strategy": "center",
-  "n_lines": 4,
-  "font_px_base": 43,
+  "n_lines": 6,
+  "font_px_base": 28,
+  "font_px_min": 24,
+  "font_levels": [
+    64,
+    48,
+    40,
+    32,
+    24
+  ],
   "zones": [
     {
       "position": "center",
@@ -13,7 +21,6 @@
       "align": "center",
       "scan_style": "h_center",
       "score": 0.2619,
-      "font_scale": 1.0,
       "bbox": [
         110,
         390,
@@ -24,8 +31,8 @@
   ],
   "lines": [
     {
-      "y": 159,
-      "x0": 90,
+      "y": 112,
+      "x0": 95,
       "x1": 292,
       "text": "华为",
       "direction": "h",
@@ -35,11 +42,11 @@
         250,
         252
       ],
-      "font_px": 43
+      "font_px": 64
     },
     {
-      "y": 212,
-      "x0": 72,
+      "y": 187,
+      "x0": 83,
       "x1": 292,
       "text": "智慧生活",
       "direction": "h",
@@ -49,11 +56,11 @@
         250,
         252
       ],
-      "font_px": 43
+      "font_px": 48
     },
     {
-      "y": 265,
-      "x0": 76,
+      "y": 243,
+      "x0": 58,
       "x1": 292,
       "text": "影像旗舰",
       "direction": "h",
@@ -63,11 +70,11 @@
         250,
         252
       ],
-      "font_px": 43
+      "font_px": 40
     },
     {
-      "y": 318,
-      "x0": 92,
+      "y": 290,
+      "x0": 82,
       "x1": 292,
       "text": "极致性能",
       "direction": "h",
@@ -77,7 +84,35 @@
         250,
         252
       ],
-      "font_px": 43
+      "font_px": 32
+    },
+    {
+      "y": 327,
+      "x0": 90,
+      "x1": 292,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 24
+    },
+    {
+      "y": 355,
+      "x0": 93,
+      "x1": 291,
+      "text": "影像旗舰极致性能",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 24
     }
   ]
 }

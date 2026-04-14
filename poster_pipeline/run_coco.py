@@ -29,8 +29,8 @@ SUBJECT_LABELS = {
 }
 
 FONT_PATH   = "/System/Library/Fonts/STHeiti Medium.ttc"
-FONT_PX     = 56
-FONT_PX_MIN = 48
+FONT_PX     = 28
+FONT_PX_MIN = 24
 
 
 def coco_poly_to_mask(segmentation, h: int, w: int) -> np.ndarray:

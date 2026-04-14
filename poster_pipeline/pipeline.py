@@ -223,8 +223,8 @@ def run_poster_pipeline(
         all_lines.extend(zone_lines)
 
     # ── 6. 渲染 ────────────────────────────────────────────────────────────
-    preview      = render_lines(rgb, all_lines, font_path=font_path, draw_bbox=False)
-    bbox_preview = render_lines(rgb, all_lines, font_path=font_path, draw_bbox=True)
+    preview      = render_lines(rgb, all_lines, font_path=font_path, draw_bbox=True)
+    bbox_preview = preview   # 保持兼容，指向同一结果
 
     debug["strategy"]      = strategy_name
     debug["n_lines"]       = len(all_lines)
