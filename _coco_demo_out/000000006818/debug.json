@@ -1,74 +1,77 @@
 {
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.409,
+  "dilate_iter": 14,
+  "comp_dilate_iter": 6,
+  "writable_ratio": 0.42,
+  "strategy": "top_only",
   "n_lines": 4,
   "font_px_base": 53,
   "zones": [
     {
-      "position": "right",
-      "direction": "v",
-      "align": "right",
-      "scan_style": "v_right",
-      "score": 0.268,
+      "position": "top",
+      "direction": "h",
+      "align": "center",
+      "scan_style": "h_top",
+      "score": 0.1713,
       "font_scale": 1.0,
       "bbox": [
         0,
-        503,
-        146,
+        268,
+        143,
         427
       ]
     }
   ],
   "lines": [
     {
-      "y": 6,
-      "x0": 374,
-      "x1": 427,
-      "text": "华为智慧生活影像旗",
-      "direction": "v",
-      "align": "right",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 53
-    },
-    {
-      "y": 6,
-      "x0": 306,
-      "x1": 359,
-      "text": "华为智慧生活影像",
-      "direction": "v",
-      "align": "right",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 53
-    },
-    {
-      "y": 6,
-      "x0": 238,
-      "x1": 291,
-      "text": "华为智慧生活影",
-      "direction": "v",
-      "align": "right",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 53
-    },
-    {
-      "y": 174,
-      "x0": 170,
-      "x1": 223,
+      "y": 0,
+      "x0": 201,
+      "x1": 421,
       "text": "华为",
-      "direction": "v",
-      "align": "right",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 53
+    },
+    {
+      "y": 66,
+      "x0": 204,
+      "x1": 421,
+      "text": "智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 53
+    },
+    {
+      "y": 132,
+      "x0": 204,
+      "x1": 421,
+      "text": "影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 53
+    },
+    {
+      "y": 198,
+      "x0": 153,
+      "x1": 421,
+      "text": "极致性能",
+      "direction": "h",
+      "align": "center",
       "fg": [
         248,
         250,

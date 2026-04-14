@@ -15,7 +15,7 @@ _ROOT = Path(__file__).resolve().parent.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from poster_pipeline.pipeline import run_poster_pipeline, save_debug_json  # noqa: E402
+from poster_pipeline.pipeline import make_combined_mask, run_poster_pipeline, save_debug_json  # noqa: E402
 
 IMG_DIR = Path("/Users/wuwenhao/Downloads/val2017")
 ANN_FILE = Path("/Users/wuwenhao/Downloads/annotations/instances_val2017.json")
@@ -100,15 +100,15 @@ def main():
             result = run_poster_pipeline(
                 rgb,
                 masks,
-                subject_labels=SUBJECT_LABELS,
-                corpus_text="华为 智慧生活 影像旗舰 极致性能",
-                font_path=FONT_PATH,
-                font_px=FONT_PX,
-                dilate_iter=14,
-                comp_dilate_iter=3,
-                complexity_thresh=0.50,
-                min_area_ratio=0.03,
-                max_zones=3,
+                subject_labels    = SUBJECT_LABELS,
+                corpus_text       = "华为 智慧生活 影像旗舰 极致性能",
+                font_path         = FONT_PATH,
+                font_px           = FONT_PX,
+                dilate_iter       = 14,
+                comp_dilate_iter  = 6,
+                complexity_thresh = 0.50,
+                min_area_ratio    = 0.03,
+                max_zones         = 3,
             )
         except Exception as e:
             import traceback
@@ -122,31 +122,39 @@ def main():
         Image.fromarray(rgb).save(out_sub / "image.png")
         Image.fromarray(result["preview"]).save(out_sub / "preview.png")
 
-        # ── writable_mask：非主体可用区域（白=可写，黑=禁区） ──────────────
+        # 三层合并可视化（白=可写，红=主体禁区，黄=复杂度禁区）
+        combined = result.get("combined_mask")
+        if combined is not None:
+            Image.fromarray(combined).save(out_sub / "combined_mask.png")
+
+        # 主体禁区（含膨胀边距）
+        forb = result.get("forb_mask")
+        if forb is not None:
+            Image.fromarray((forb.astype(np.uint8) * 255)).save(out_sub / "subject_mask.png")
+
+        # 复杂度连续图 + 二值图
+        comp = result.get("complexity")
+        if comp is not None:
+            c_vis = ((1 - comp) * 255).astype(np.uint8)
+            Image.fromarray(c_vis).save(out_sub / "complexity_map.png")
+            comp_bin = (comp <= 0.50).astype(np.uint8) * 255
+            Image.fromarray(comp_bin).save(out_sub / "complexity_binary.png")
+
+        # 最终可写区域
         wb = result.get("writable")
         if wb is not None:
             Image.fromarray((wb.astype(np.uint8) * 255)).save(out_sub / "writable_mask.png")
 
-        # ── quality_map：区域复杂度（白=低复杂/适合写字，黑=高复杂/不适合） ──
-        comp = result.get("complexity")
-        if comp is not None:
-            c_vis = ((1 - comp) * 255).astype(np.uint8)
-            Image.fromarray(c_vis).save(out_sub / "quality_map.png")
+        save_debug_json(str(out_sub / "debug.json"), result["debug"])
 
-            # writable 区域叠加复杂度：只看非主体区域的质量分布
-            if wb is not None:
-                masked = (c_vis.astype(np.float32) * wb).astype(np.uint8)
-                Image.fromarray(masked).save(out_sub / "quality_writable.png")
-
-        save_debug_json(out_sub / "debug.json", result["debug"])
-
-        n_lines      = result["debug"].get("n_lines", 0)
-        wr           = result["debug"].get("writable_ratio", 0)
-        skip         = result["debug"].get("skip_reason", "")
-        zones_info   = result["debug"].get("zones", [])
-        zone_summary = [(z["position"], z["direction"]) for z in zones_info]
-        print(f"  writable={wr:.1%}  zones={zone_summary}  lines={n_lines}  "
-              f"{('skip: ' + skip) if skip else ''}-> {out_sub}")
+        n_lines    = result["debug"].get("n_lines", 0)
+        wr         = result["debug"].get("writable_ratio", 0)
+        skip       = result["debug"].get("skip_reason", "")
+        strategy   = result["debug"].get("strategy", "?")
+        zones_info = result["debug"].get("zones", [])
+        zone_sum   = [(z["position"], z["direction"]) for z in zones_info]
+        print(f"  strategy={strategy}  writable={wr:.1%}  zones={zone_sum}  "
+              f"lines={n_lines}  {('skip: ' + skip) if skip else ''}-> {out_sub}")
 
     print(f"\n完成，输出目录: {OUT_DIR}")
 

@@ -1,31 +1,34 @@
 {
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.606,
-  "n_lines": 5,
+  "dilate_iter": 14,
+  "comp_dilate_iter": 6,
+  "writable_ratio": 0.631,
+  "strategy": "center",
+  "n_lines": 4,
   "font_px_base": 43,
   "zones": [
     {
       "position": "center",
-      "direction": "v",
+      "direction": "h",
       "align": "center",
-      "scan_style": "v_right",
-      "score": 0.247,
+      "scan_style": "h_center",
+      "score": 0.2619,
       "font_scale": 1.0,
       "bbox": [
-        0,
-        469,
-        0,
-        351
+        110,
+        390,
+        52,
+        298
       ]
     }
   ],
   "lines": [
     {
-      "y": 26,
-      "x0": 308,
-      "x1": 351,
+      "y": 159,
+      "x0": 90,
+      "x1": 292,
       "text": "华为",
-      "direction": "v",
+      "direction": "h",
       "align": "center",
       "fg": [
         248,
@@ -35,11 +38,11 @@
       "font_px": 43
     },
     {
-      "y": 6,
-      "x0": 253,
-      "x1": 296,
-      "text": "华为智慧生活影像",
-      "direction": "v",
+      "y": 212,
+      "x0": 72,
+      "x1": 292,
+      "text": "智慧生活",
+      "direction": "h",
       "align": "center",
       "fg": [
         248,
@@ -49,11 +52,11 @@
       "font_px": 43
     },
     {
-      "y": 61,
-      "x0": 198,
-      "x1": 241,
-      "text": "华为智慧生活影像旗",
-      "direction": "v",
+      "y": 265,
+      "x0": 76,
+      "x1": 292,
+      "text": "影像旗舰",
+      "direction": "h",
       "align": "center",
       "fg": [
         248,
@@ -63,25 +66,11 @@
       "font_px": 43
     },
     {
-      "y": 75,
-      "x0": 143,
-      "x1": 186,
-      "text": "华为智慧生活影像",
-      "direction": "v",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 43
-    },
-    {
-      "y": 154,
-      "x0": 88,
-      "x1": 131,
-      "text": "华为智慧",
-      "direction": "v",
+      "y": 318,
+      "x0": 92,
+      "x1": 292,
+      "text": "极致性能",
+      "direction": "h",
       "align": "center",
       "fg": [
         248,

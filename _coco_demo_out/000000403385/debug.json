@@ -1,92 +1,81 @@
 {
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.465,
-  "n_lines": 4,
+  "dilate_iter": 14,
+  "comp_dilate_iter": 6,
+  "writable_ratio": 0.483,
+  "strategy": "top_bottom",
+  "n_lines": 3,
   "font_px_base": 56,
   "zones": [
-    {
-      "position": "top",
-      "direction": "h",
-      "align": "center",
-      "scan_style": "h_top",
-      "score": 0.195,
-      "font_scale": 1.0,
-      "bbox": [
-        0,
-        208,
-        0,
-        499
-      ]
-    },
     {
       "position": "bottom",
       "direction": "h",
       "align": "center",
       "scan_style": "h_bottom",
-      "score": 0.173,
+      "score": 0.1607,
+      "font_scale": 1.0,
+      "bbox": [
+        345,
+        511,
+        30,
+        640
+      ]
+    },
+    {
+      "position": "top",
+      "direction": "h",
+      "align": "center",
+      "scan_style": "h_top",
+      "score": 0.1479,
       "font_scale": 0.72,
       "bbox": [
-        348,
-        511,
-        33,
+        0,
+        178,
+        0,
         640
       ]
     }
   ],
   "lines": [
     {
-      "y": 0,
-      "x0": 6,
-      "x1": 471,
-      "text": "华为智慧生活",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        20,
-        24,
-        28
-      ],
-      "font_px": 56
-    },
-    {
-      "y": 70,
-      "x0": 69,
-      "x1": 414,
-      "text": "影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        20,
-        24,
-        28
-      ],
-      "font_px": 56
-    },
-    {
-      "y": 400,
-      "x0": 419,
+      "y": 420,
+      "x0": 74,
       "x1": 634,
-      "text": "华为",
+      "text": "华为智慧生活影像旗舰",
       "direction": "h",
       "align": "center",
       "fg": [
         248,
         250,
         252
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 0,
+      "x0": 6,
+      "x1": 487,
+      "text": "华为智慧生活影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
       ],
       "font_px": 40
     },
     {
-      "y": 450,
-      "x0": 54,
-      "x1": 634,
-      "text": "智慧生活影像旗舰极致性能",
+      "y": 50,
+      "x0": 45,
+      "x1": 444,
+      "text": "极致性能",
       "direction": "h",
       "align": "center",
       "fg": [
-        248,
-        250,
-        252
+        20,
+        24,
+        28
       ],
       "font_px": 40
     }

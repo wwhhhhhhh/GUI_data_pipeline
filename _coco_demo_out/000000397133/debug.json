@@ -1,7 +1,10 @@
 {
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.284,
-  "n_lines": 4,
+  "dilate_iter": 14,
+  "comp_dilate_iter": 6,
+  "writable_ratio": 0.295,
+  "strategy": "bottom_only",
+  "n_lines": 1,
   "font_px_base": 53,
   "zones": [
     {
@@ -9,34 +12,20 @@
       "direction": "h",
       "align": "center",
       "scan_style": "h_bottom",
-      "score": 0.18,
+      "score": 0.1487,
       "font_scale": 1.0,
       "bbox": [
-        153,
+        247,
         427,
-        285,
-        640
-      ]
-    },
-    {
-      "position": "left",
-      "direction": "v",
-      "align": "left",
-      "scan_style": "v_left",
-      "score": 0.048,
-      "font_scale": 0.72,
-      "bbox": [
-        133,
-        271,
         0,
-        194
+        640
       ]
     }
   ],
   "lines": [
     {
-      "y": 198,
-      "x0": 527,
+      "y": 264,
+      "x0": 496,
       "x1": 634,
       "text": "华为",
       "direction": "h",
@@ -47,48 +36,6 @@
         252
       ],
       "font_px": 53
-    },
-    {
-      "y": 153,
-      "x0": 0,
-      "x1": 38,
-      "text": "华为",
-      "direction": "v",
-      "align": "left",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 38
-    },
-    {
-      "y": 145,
-      "x0": 49,
-      "x1": 87,
-      "text": "华为",
-      "direction": "v",
-      "align": "left",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 38
-    },
-    {
-      "y": 146,
-      "x0": 98,
-      "x1": 136,
-      "text": "华为",
-      "direction": "v",
-      "align": "left",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 38
     }
   ]
 }
