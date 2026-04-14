@@ -1,27 +1,32 @@
 {
-  "layout_style": "v_right",
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.58,
+  "writable_ratio": 0.606,
   "n_lines": 5,
-  "font_px_used": 43,
-  "fg_rgb": [
-    248,
-    250,
-    252
-  ],
-  "bg_median_rgb": [
-    174,
-    171,
-    135
+  "font_px_base": 43,
+  "zones": [
+    {
+      "position": "center",
+      "direction": "v",
+      "align": "center",
+      "scan_style": "v_right",
+      "score": 0.247,
+      "font_scale": 1.0,
+      "bbox": [
+        0,
+        469,
+        0,
+        351
+      ]
+    }
   ],
   "lines": [
     {
-      "y": 30,
+      "y": 26,
       "x0": 308,
       "x1": 351,
       "text": "华为",
       "direction": "v",
-      "align": "right",
+      "align": "center",
       "fg": [
         248,
         250,
@@ -33,23 +38,9 @@
       "y": 6,
       "x0": 253,
       "x1": 296,
-      "text": "华为智慧",
-      "direction": "v",
-      "align": "right",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 43
-    },
-    {
-      "y": 66,
-      "x0": 198,
-      "x1": 241,
       "text": "华为智慧生活影像",
       "direction": "v",
-      "align": "right",
+      "align": "center",
       "fg": [
         248,
         250,
@@ -58,12 +49,26 @@
       "font_px": 43
     },
     {
-      "y": 78,
+      "y": 61,
+      "x0": 198,
+      "x1": 241,
+      "text": "华为智慧生活影像旗",
+      "direction": "v",
+      "align": "center",
+      "fg": [
+        248,
+        250,
+        252
+      ],
+      "font_px": 43
+    },
+    {
+      "y": 75,
       "x0": 143,
       "x1": 186,
       "text": "华为智慧生活影像",
       "direction": "v",
-      "align": "right",
+      "align": "center",
       "fg": [
         248,
         250,
@@ -72,12 +77,12 @@
       "font_px": 43
     },
     {
-      "y": 178,
+      "y": 154,
       "x0": 88,
       "x1": 131,
-      "text": "华为智",
+      "text": "华为智慧",
       "direction": "v",
-      "align": "right",
+      "align": "center",
       "fg": [
         248,
         250,

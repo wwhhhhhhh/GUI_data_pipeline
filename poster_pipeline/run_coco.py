@@ -31,20 +31,6 @@ SUBJECT_LABELS = {
 FONT_PATH = "/System/Library/Fonts/STHeiti Medium.ttc"
 FONT_PX = 56
 
-# 10 张图循环使用多种布局风格（对应 layout_scanline.STYLES）
-STYLE_CYCLE = [
-    "h_top",      # 横排，优先顶部
-    "h_bottom",   # 横排，优先底部
-    "h_top",      # 横排，优先顶部（重复，凑 10 张）
-    "h_center",   # 横排，居中区域
-    "v_right",    # 竖排，从右侧开始
-    "v_left",     # 竖排，从左侧开始
-    "surround",   # 环绕：上半区横排 + 下半区横排
-    "h_bottom",   # 横排，优先底部
-    "h_center",   # 横排，居中区域
-    "v_right",    # 竖排，从右侧开始
-]
-
 
 def coco_poly_to_mask(segmentation, h: int, w: int) -> np.ndarray:
     mask = np.zeros((h, w), dtype=np.uint8)
@@ -91,9 +77,8 @@ def main():
         img_path = IMG_DIR / img_info["file_name"]
         h, w = img_info["height"], img_info["width"]
         stem = img_path.stem
-        style = STYLE_CYCLE[idx]
 
-        print(f"\n[{idx+1}/10] {img_path.name}  ({w}x{h})  风格={style}")
+        print(f"\n[{idx+1}/10] {img_path.name}  ({w}x{h})")
 
         bgr = cv2.imread(str(img_path))
         if bgr is None:
@@ -119,10 +104,11 @@ def main():
                 corpus_text="华为 智慧生活 影像旗舰 极致性能",
                 font_path=FONT_PATH,
                 font_px=FONT_PX,
-                layout_style=style,
                 dilate_iter=14,
+                comp_dilate_iter=3,
                 complexity_thresh=0.50,
-                min_area_ratio=0.04,
+                min_area_ratio=0.03,
+                max_zones=3,
             )
         except Exception as e:
             import traceback
@@ -154,10 +140,13 @@ def main():
 
         save_debug_json(out_sub / "debug.json", result["debug"])
 
-        n_lines = result["debug"].get("n_lines", 0)
-        writable_ratio = result["debug"].get("writable_ratio", 0)
-        skip = result["debug"].get("skip_reason", "")
-        print(f"  writable={writable_ratio:.1%}  lines={n_lines}  {('skip: '+skip) if skip else ''}-> {out_sub}")
+        n_lines      = result["debug"].get("n_lines", 0)
+        wr           = result["debug"].get("writable_ratio", 0)
+        skip         = result["debug"].get("skip_reason", "")
+        zones_info   = result["debug"].get("zones", [])
+        zone_summary = [(z["position"], z["direction"]) for z in zones_info]
+        print(f"  writable={wr:.1%}  zones={zone_summary}  lines={n_lines}  "
+              f"{('skip: ' + skip) if skip else ''}-> {out_sub}")
 
     print(f"\n完成，输出目录: {OUT_DIR}")
 

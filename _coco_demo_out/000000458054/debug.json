@@ -1,18 +1,23 @@
 {
-  "layout_style": "h_center",
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.619,
+  "writable_ratio": 0.633,
   "n_lines": 2,
-  "font_px_used": 53,
-  "fg_rgb": [
-    248,
-    250,
-    252
-  ],
-  "bg_median_rgb": [
-    142,
-    137,
-    133
+  "font_px_base": 53,
+  "zones": [
+    {
+      "position": "center",
+      "direction": "h",
+      "align": "center",
+      "scan_style": "h_center",
+      "score": 0.279,
+      "font_scale": 1.0,
+      "bbox": [
+        0,
+        426,
+        0,
+        640
+      ]
+    }
   ],
   "lines": [
     {

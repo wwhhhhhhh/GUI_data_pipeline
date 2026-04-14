@@ -1,24 +1,71 @@
 {
-  "layout_style": "h_center",
   "complexity_thresh": 0.5,
-  "writable_ratio": 0.481,
-  "n_lines": 3,
-  "font_px_used": 56,
-  "fg_rgb": [
-    248,
-    250,
-    252
-  ],
-  "bg_median_rgb": [
-    153,
-    136,
-    131
+  "writable_ratio": 0.495,
+  "n_lines": 4,
+  "font_px_base": 56,
+  "zones": [
+    {
+      "position": "top",
+      "direction": "h",
+      "align": "center",
+      "scan_style": "h_top",
+      "score": 0.239,
+      "font_scale": 1.0,
+      "bbox": [
+        0,
+        159,
+        84,
+        640
+      ]
+    },
+    {
+      "position": "bottom",
+      "direction": "h",
+      "align": "center",
+      "scan_style": "h_bottom",
+      "score": 0.181,
+      "font_scale": 0.72,
+      "bbox": [
+        324,
+        480,
+        0,
+        640
+      ]
+    }
   ],
   "lines": [
     {
       "y": 0,
-      "x0": 158,
+      "x0": 148,
       "x1": 634,
+      "text": "华为智慧生活",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 70,
+      "x0": 278,
+      "x1": 634,
+      "text": "影像旗舰",
+      "direction": "h",
+      "align": "center",
+      "fg": [
+        20,
+        24,
+        28
+      ],
+      "font_px": 56
+    },
+    {
+      "y": 350,
+      "x0": 6,
+      "x1": 284,
       "text": "华为智慧生活",
       "direction": "h",
       "align": "center",
@@ -27,27 +74,13 @@
         250,
         252
       ],
-      "font_px": 56
+      "font_px": 40
     },
     {
-      "y": 70,
-      "x0": 286,
-      "x1": 634,
-      "text": "影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 56
-    },
-    {
-      "y": 350,
+      "y": 400,
       "x0": 6,
-      "x1": 266,
-      "text": "极致性能",
+      "x1": 598,
+      "text": "影像旗舰极致性能",
       "direction": "h",
       "align": "center",
       "fg": [
@@ -55,7 +88,7 @@
         250,
         252
       ],
-      "font_px": 56
+      "font_px": 40
     }
   ]
 }

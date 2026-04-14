@@ -140,6 +140,7 @@ def build_writable(
     label_key: str = "label",
     dilate_iter: int = 14,
     complexity_thresh: float = 0.50,
+    comp_dilate_iter: int = 3,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """
     一步计算最终可写字掩码及复杂度图。
@@ -147,7 +148,9 @@ def build_writable(
     流程：
       1. 合并主体 mask → 形态学膨胀 → 主体禁区 forb
       2. 计算区域级复杂度图 comp（大高斯平滑，sigma≈短边/8）
-      3. 可写区域 = (~forb) & (comp <= complexity_thresh)
+      3. 二值化：comp ≤ complexity_thresh → 低复杂可写区
+      4. 对低复杂可写区做小膨胀（comp_dilate_iter），扩充可写边界
+      5. 可写区域 = (~forb) & 膨胀后低复杂区
          若 masks 为空，forb 全为 False，可写区域仅由复杂度决定。
 
     Returns:
@@ -159,5 +162,8 @@ def build_writable(
                                forbid_labels=forbid_labels, label_key=label_key)
     forb = dilate_binary(subj, iterations=dilate_iter)
     comp = complexity_map(rgb)
-    writable = (~forb) & (comp <= complexity_thresh)
+    comp_low = comp <= complexity_thresh
+    if comp_dilate_iter > 0:
+        comp_low = dilate_binary(comp_low, iterations=comp_dilate_iter)
+    writable = (~forb) & comp_low
     return writable, comp, subj
