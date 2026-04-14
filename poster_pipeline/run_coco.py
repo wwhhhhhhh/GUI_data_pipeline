@@ -28,8 +28,9 @@ SUBJECT_LABELS = {
     "elephant", "bear", "zebra", "giraffe",
 }
 
-FONT_PATH = "/System/Library/Fonts/STHeiti Medium.ttc"
-FONT_PX = 56
+FONT_PATH   = "/System/Library/Fonts/STHeiti Medium.ttc"
+FONT_PX     = 56
+FONT_PX_MIN = 48
 
 
 def coco_poly_to_mask(segmentation, h: int, w: int) -> np.ndarray:
@@ -104,6 +105,7 @@ def main():
                 corpus_text       = "华为 智慧生活 影像旗舰 极致性能",
                 font_path         = FONT_PATH,
                 font_px           = FONT_PX,
+                font_px_min       = FONT_PX_MIN,
                 dilate_iter       = 14,
                 comp_dilate_iter  = 6,
                 complexity_thresh = 0.50,
@@ -121,6 +123,9 @@ def main():
 
         Image.fromarray(rgb).save(out_sub / "image.png")
         Image.fromarray(result["preview"]).save(out_sub / "preview.png")
+        bbox_preview = result.get("bbox_preview")
+        if bbox_preview is not None:
+            Image.fromarray(bbox_preview).save(out_sub / "bbox_preview.png")
 
         # 三层合并可视化（白=可写，红=主体禁区，黄=复杂度禁区）
         combined = result.get("combined_mask")

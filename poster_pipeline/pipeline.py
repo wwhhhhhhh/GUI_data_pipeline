@@ -3,9 +3,9 @@
 
 流程：
   1. build_writable  → 非主体掩码 ∩ 低复杂度掩码（含两步膨胀）= 可写字区域
-  2. find_text_zones → 对 11 种策略打分，选最优策略，确定各区方向/对齐/字号层级
-  3. plan_layout     → 在每个区域内扫描槽位（band.all 保证不跨噪点）
-  4. fill_slots      → 填入语料（每区独立获得完整语料）
+  2. find_text_zones → 对 12 种策略打分，选最优策略，确定各区方向/对齐
+  3. plan_hierarchical → 按字号层级在每个区域内规划 LineSlot（从大到小依次放置）
+  4. fill_slots      → 填入语料（每行独立字号，词指针跨行顺序前进）
   5. render_lines    → 渲染（per-line 颜色与字号，带对比描边）
 """
 from __future__ import annotations
@@ -18,9 +18,59 @@ import numpy as np
 
 from .auto_layout import find_text_zones
 from .color_contrast import contrast_text_rgb
-from .layout_scanline import fill_slots, plan_layout, render_lines
+from .layout_scanline import fill_slots, plan_hierarchical, render_lines
 from .writable_mask import build_writable
 
+
+# ---------------------------------------------------------------------------
+# 字号层级工具
+# ---------------------------------------------------------------------------
+
+def _font_levels(font_px_base: int, font_px_min: int) -> List[int]:
+    """
+    根据基础字号和全图最小字号，生成降序字号层级列表。
+
+    层级比例：× 2.2 / × 1.7 / × 1.3 / × 1.0，结果按 8px 对齐，
+    去除重复后末尾附加 font_px_min（若不在列表中）。
+
+    示例（base=56, min=48）→ [120, 96, 72, 56, 48]
+    示例（base=48, min=48）→ [104, 80, 64, 48]
+    """
+    seen: set = set()
+    levels: List[int] = []
+    for ratio in [2.2, 1.7, 1.3, 1.0]:
+        raw = int(font_px_base * ratio)
+        px  = max(font_px_min, (raw + 4) // 8 * 8)   # 8px 对齐，不低于最小值
+        if px not in seen:
+            seen.add(px)
+            levels.append(px)
+    if font_px_min not in seen:
+        levels.append(font_px_min)
+    return levels   # 降序
+
+
+def _zone_schedule(
+    all_levels: List[int],
+    font_px_min: int,
+    zone_idx: int,
+    max_slots: int = 6,
+) -> List[int]:
+    """
+    构造单个区域的字号序列。
+
+    - zone_idx=0（主区）：从最大字号开始，下行逐级缩小，最后补 min。
+    - zone_idx=1（副区）：从第二大字号开始，以此类推。
+    - 序列长度不超过 max_slots，保证每个槽位都有对应字号。
+    """
+    start = min(zone_idx, len(all_levels) - 1)
+    base  = all_levels[start:]                         # 从对应层级开始
+    pad   = [font_px_min] * max(0, max_slots - len(base))
+    return (base + pad)[:max_slots]
+
+
+# ---------------------------------------------------------------------------
+# 合并掩码可视化
+# ---------------------------------------------------------------------------
 
 def make_combined_mask(
     writable:  np.ndarray,
@@ -31,37 +81,35 @@ def make_combined_mask(
       白色  [255,255,255] — 可写字区域
       红色  [210, 55, 55] — 主体禁区（含膨胀安全边距）
       黄色  [220,175,  0] — 复杂度禁区（非主体但纹理过高）
-
-    三个类别互斥，覆盖全图所有像素：
-      writable ⊆ ~forb_mask
-      复杂度禁区 = ~forb_mask & ~writable
     """
     h, w = writable.shape
     canvas = np.zeros((h, w, 3), dtype=np.uint8)
-    # 先填复杂度禁区（非主体、非可写）
-    canvas[~forb_mask & ~writable] = [220, 175, 0]
-    # 再覆盖主体禁区（含膨胀缓冲）
-    canvas[forb_mask]               = [210,  55, 55]
-    # 最后覆盖可写区域（白色，优先级最高）
+    canvas[~forb_mask & ~writable] = [220, 175,   0]
+    canvas[forb_mask]               = [210,  55,  55]
     canvas[writable]                = [255, 255, 255]
     return canvas
 
+
+# ---------------------------------------------------------------------------
+# 主入口
+# ---------------------------------------------------------------------------
 
 def run_poster_pipeline(
     rgb: np.ndarray,
     masks: List[Dict[str, Any]],
     *,
-    subject_labels:   Optional[set] = None,
-    corpus_text:      str   = "示例标题 用于合成数据海报排版",
-    font_path:        Optional[str] = None,
-    font_px:          int   = 48,
-    # ── 两个膨胀参数，均可由调用方配置 ──
-    dilate_iter:      int   = 14,    # 主体禁区膨胀半径（像素步数）
-    comp_dilate_iter: int   = 6,     # 低复杂度区域膨胀半径（扩充可写边界）
-    # ── 其他配置 ──
+    subject_labels:    Optional[set] = None,
+    corpus_text:       str   = "示例标题 用于合成数据海报排版",
+    font_path:         Optional[str] = None,
+    font_px:           int   = 56,    # 基础字号（用于计算层级）
+    font_px_min:       int   = 48,    # 全图最小字号（硬下限）
+    # ── 膨胀参数 ──────────────────────────────────────────────────────────
+    dilate_iter:       int   = 14,    # 主体禁区膨胀步数
+    comp_dilate_iter:  int   = 6,     # 低复杂度区域膨胀步数
+    # ── 其他配置 ──────────────────────────────────────────────────────────
     complexity_thresh: float = 0.50,
-    min_area_ratio:   float = 0.03,  # 全图可写面积下限
-    max_zones:        int   = 3,     # 最多使用几个排版区域
+    min_area_ratio:    float = 0.03,  # 全图可写面积下限
+    max_zones:         int   = 3,     # 最多使用几个排版区域
 ) -> Dict[str, Any]:
     """
     参数：
@@ -69,7 +117,8 @@ def run_poster_pipeline(
       masks             — [{"mask": bool HxW, "label": str}, ...]，可为空列表
       subject_labels    — 需要避开的类别集合；None 表示全部 mask 都避开
       corpus_text       — 空格分隔的词组
-      font_px           — 基础字号（像素），自动限制不超过短边 1/8，最小 24
+      font_px           — 基础字号（像素），用于计算 × 2.2 / 1.7 / 1.3 / 1.0 层级
+      font_px_min       — 全图最小字号（像素），所有层级不低于此值
       dilate_iter       — 主体禁区膨胀步数，越大文字离主体越远
       comp_dilate_iter  — 低复杂度区域膨胀步数，越大可写边界越宽松
       complexity_thresh — 复杂度阈值（0~1），低于此才算低复杂可写
@@ -78,6 +127,7 @@ def run_poster_pipeline(
 
     Returns dict：
       preview       — 渲染结果 ndarray (HxWx3 uint8)
+      bbox_preview  — 带 bbox 框的渲染结果（调试用）
       lines         — List[TextLine]
       writable      — bool HxW 可写字区域
       complexity    — float32 HxW [0,1] 复杂度图
@@ -113,13 +163,14 @@ def run_poster_pipeline(
     if writable_ratio < min_area_ratio:
         debug["skip_reason"] = "writable area too small"
         debug["n_lines"] = 0
-        return {"debug": debug, "preview": rgb, "lines": [],
+        return {"debug": debug, "preview": rgb, "bbox_preview": rgb, "lines": [],
                 "writable": writable, "complexity": comp,
                 "subj_mask": subj_mask, "forb_mask": forb_mask,
                 "combined_mask": combined}
 
-    # ── 3. 自适应字号：不超过短边 1/8，最小 24px ─────────────────────────
-    font_px_base = max(24, min(font_px, min(h, w) // 8))
+    # ── 3. 字号层级：基础字号受短边 1/8 限制，最小为 font_px_min ────────
+    font_px_base = max(font_px_min, min(font_px, min(h, w) // 8))
+    all_levels   = _font_levels(font_px_base, font_px_min)
 
     # ── 4. 策略打分 → 选最优布局 → 提取区域 ─────────────────────────────
     zones, strategy_name = find_text_zones(
@@ -130,38 +181,56 @@ def run_poster_pipeline(
     if not zones:
         debug["skip_reason"] = "no valid zones found"
         debug["n_lines"] = 0
-        return {"debug": debug, "preview": rgb, "lines": [],
+        return {"debug": debug, "preview": rgb, "bbox_preview": rgb, "lines": [],
                 "writable": writable, "complexity": comp,
                 "subj_mask": subj_mask, "forb_mask": forb_mask,
                 "combined_mask": combined}
 
-    # ── 5. 逐区排版 ────────────────────────────────────────────────────────
+    # ── 5. 逐区层次排版 ────────────────────────────────────────────────────
     all_lines = []
 
-    for zone in zones:
-        zone_font_px = max(24, int(font_px_base * zone.font_scale))
-
-        # 每区独立从该区背景色采样文字颜色
+    for zone_idx, zone in enumerate(zones):
+        # 每区背景色采样文字颜色
         fr, fg_v, fb, _br, _bg, _bb = contrast_text_rgb(rgb, zone.mask)
         zone_fg = (fr, fg_v, fb)
 
-        slots = plan_layout(zone.mask, zone_font_px, style=zone.scan_style)
+        # 构造该区字号序列（主区从最大级别开始，次区从次级开始）
+        schedule = _zone_schedule(all_levels, font_px_min, zone_idx, max_slots=7)
+
+        # 竖排 side：从 scan_style 中解析（"v_right" → "right"，"v_left" → "left"）
+        v_side = (zone.scan_style.split("_", 1)[1]
+                  if zone.direction == "v" and "_" in zone.scan_style
+                  else "right")
+
+        slots = plan_hierarchical(
+            zone.mask, schedule, zone.direction,
+            side=v_side,
+            margin=6,
+            min_width_chars=2,
+            min_height_chars=2,
+            max_slots=6,
+        )
         if not slots:
             continue
 
         zone_lines = fill_slots(
             slots, corpus_text,
-            font_path=font_path, font_px=zone_font_px,
-            align=zone.align, fg=zone_fg,
+            font_path=font_path,
+            font_px=font_px_min,   # 回退值，实际由 slot.font_px 控制
+            align=zone.align,
+            fg=zone_fg,
         )
         all_lines.extend(zone_lines)
 
     # ── 6. 渲染 ────────────────────────────────────────────────────────────
-    preview = render_lines(rgb, all_lines, font_path=font_path)
+    preview      = render_lines(rgb, all_lines, font_path=font_path, draw_bbox=False)
+    bbox_preview = render_lines(rgb, all_lines, font_path=font_path, draw_bbox=True)
 
     debug["strategy"]      = strategy_name
     debug["n_lines"]       = len(all_lines)
     debug["font_px_base"]  = font_px_base
+    debug["font_px_min"]   = font_px_min
+    debug["font_levels"]   = all_levels
     debug["zones"]         = [
         {
             "position":   z.position,
@@ -169,7 +238,6 @@ def run_poster_pipeline(
             "align":      z.align,
             "scan_style": z.scan_style,
             "score":      round(z.score, 4),
-            "font_scale": z.font_scale,
             "bbox":       z.bbox,
         }
         for z in zones
@@ -179,6 +247,7 @@ def run_poster_pipeline(
     return {
         "debug":         debug,
         "preview":       preview,
+        "bbox_preview":  bbox_preview,
         "lines":         all_lines,
         "writable":      writable,
         "complexity":    comp,

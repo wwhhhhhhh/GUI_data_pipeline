@@ -120,6 +120,11 @@ def _save_outputs(out_sub: Path, rgb: np.ndarray, result: dict,
     # 排版渲染结果
     Image.fromarray(result["preview"]).save(out_sub / "preview.png")
 
+    # 带 bbox 框的渲染结果（调试用，可见排版网格）
+    bbox_preview = result.get("bbox_preview")
+    if bbox_preview is not None:
+        Image.fromarray(bbox_preview).save(out_sub / "bbox_preview.png")
+
     # 三层合并可视化（白=可写，红=主体禁区，黄=复杂度禁区）
     combined = result.get("combined_mask")
     if combined is not None:
@@ -161,6 +166,7 @@ def process_entry(
     complexity_thresh: float,
     max_zones:         int,
     font_px:           int,
+    font_px_min:       int,
 ) -> bool:
     """处理单条记录，返回是否成功。"""
     # ── 找本地图片 ──────────────────────────────────────────────────────────
@@ -197,6 +203,7 @@ def process_entry(
             corpus_text       = CORPUS,
             font_path         = font_path,
             font_px           = font_px,
+            font_px_min       = font_px_min,
             dilate_iter       = dilate_iter,
             comp_dilate_iter  = comp_dilate_iter,
             complexity_thresh = complexity_thresh,
@@ -246,6 +253,7 @@ def main():
     ap.add_argument("--comp_dilate",      type=int,   default=6,    help="复杂度区域膨胀步数（默认 6）")
     ap.add_argument("--complexity_thresh",type=float, default=0.50, help="复杂度阈值 0~1（默认 0.50）")
     ap.add_argument("--font_px",          type=int,   default=56,   help="基础字号像素（默认 56）")
+    ap.add_argument("--font_px_min",      type=int,   default=48,   help="全图最小字号像素（默认 48）")
     args = ap.parse_args()
 
     json_path = Path(args.json)
@@ -265,6 +273,7 @@ def main():
     print(f"复杂度阈值:        {args.complexity_thresh}")
     print(f"最大区域数:        {args.max_zones}")
     print(f"基础字号:          {args.font_px}px")
+    print(f"最小字号:          {args.font_px_min}px")
 
     with open(json_path, encoding="utf-8") as f:
         data = json.load(f)
@@ -298,6 +307,7 @@ def main():
             complexity_thresh = args.complexity_thresh,
             max_zones         = args.max_zones,
             font_px           = args.font_px,
+            font_px_min       = args.font_px_min,
         )
         ok += success
         err += not success
