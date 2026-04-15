@@ -11,13 +11,14 @@
 from __future__ import annotations
 
 import json
+import random
 from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 
 import numpy as np
 
 from .auto_layout import find_text_zones
-from .color_contrast import contrast_text_rgb
+from .color_contrast import contrast_from_palette
 from .layout_scanline import fill_slots, plan_hierarchical, render_lines
 from .writable_mask import build_writable
 
@@ -26,27 +27,42 @@ from .writable_mask import build_writable
 # 字号层级工具
 # ---------------------------------------------------------------------------
 
-def _font_levels(font_px_base: int, font_px_min: int) -> List[int]:
+def _font_levels(
+    font_px_base: int,
+    font_px_min: int,
+    *,
+    n_tiers: int = 3,
+) -> List[int]:
     """
-    根据基础字号和全图最小字号，生成降序字号层级列表。
+    根据基础字号、全图最小字号和层级数生成降序字号层级列表。
 
-    层级比例：× 2.2 / × 1.7 / × 1.3 / × 1.0，结果按 8px 对齐，
-    去除重复后末尾附加 font_px_min（若不在列表中）。
+    - n_tiers ∈ {1, 2, 3}：一张图内最多 3 种字号，最少 1 种。
+    - 所有层级不低于 font_px_min（硬下限，默认 > 48px）。
+    - 结果按 8px 对齐，降序。
 
-    示例（base=56, min=48）→ [120, 96, 72, 56, 48]
-    示例（base=48, min=48）→ [104, 80, 64, 48]
+    比例按 n_tiers 自动选取：
+      1 → [2.0]               （单一字号）
+      2 → [2.2, 1.2]          （大/小）
+      3 → [2.4, 1.6, 1.0]     （大/中/小）
     """
+    if n_tiers <= 1:
+        ratios = [1.8]
+    elif n_tiers == 2:
+        ratios = [2.2, 1.2]
+    else:
+        ratios = [2.4, 1.6, 1.0]
+
     seen: set = set()
     levels: List[int] = []
-    for ratio in [2.2, 1.7, 1.3, 1.0]:
+    for ratio in ratios:
         raw = int(font_px_base * ratio)
-        px  = max(font_px_min, (raw + 4) // 8 * 8)   # 8px 对齐，不低于最小值
+        px  = max(font_px_min, (raw + 4) // 8 * 8)
         if px not in seen:
             seen.add(px)
             levels.append(px)
-    if font_px_min not in seen:
-        levels.append(font_px_min)
-    return levels   # 降序
+    # 保证至少包含最小层，且全部 ≥ font_px_min
+    levels = [max(px, font_px_min) for px in levels]
+    return sorted(set(levels), reverse=True)[:max(1, n_tiers)]
 
 
 def _zone_schedule(
@@ -58,14 +74,50 @@ def _zone_schedule(
     """
     构造单个区域的字号序列。
 
-    - zone_idx=0（主区）：从最大字号开始，下行逐级缩小，最后补 min。
-    - zone_idx=1（副区）：从第二大字号开始，以此类推。
-    - 序列长度不超过 max_slots，保证每个槽位都有对应字号。
+    - zone_idx=0（主区）：从最大字号开始，按层级降序使用。
+    - zone_idx>0（副区）：从次级字号开始（若层级不足则直接复用最小层）。
+    - 序列长度按槽位数补齐，末尾用最小字号填充（不低于 font_px_min）。
     """
+    if not all_levels:
+        return [font_px_min] * max_slots
     start = min(zone_idx, len(all_levels) - 1)
-    base  = all_levels[start:]                         # 从对应层级开始
-    pad   = [font_px_min] * max(0, max_slots - len(base))
-    return (base + pad)[:max_slots]
+    base  = all_levels[start:]
+    tail  = all_levels[-1]                              # 最小层级
+    pad   = [tail] * max(0, max_slots - len(base))
+    seq   = (base + pad)[:max_slots]
+    return [max(px, font_px_min) for px in seq]
+
+
+# ---------------------------------------------------------------------------
+# meta 构造
+# ---------------------------------------------------------------------------
+
+def _text_meta(ln) -> Dict[str, Any]:
+    """
+    单行文字的 meta 信息：
+      bbox       — [x0, y0, x1, y1]（y1 随方向计算：横排= y+font_px，
+                   竖排= y + len(text)*font_px）
+      text       — 文字内容
+      font_px    — 字号（像素值）
+      direction  — "h" 横排 / "v" 竖排
+      font_name  — 实际加载到的字体文件名
+      color      — {"rgb": [r,g,b], "name": "红"}（名称为色卡随机中/英名之一）
+    """
+    if ln.direction == "v":
+        y1 = ln.y + max(1, len(ln.text)) * ln.font_px
+    else:
+        y1 = ln.y + ln.font_px
+    return {
+        "bbox":      [int(ln.x0), int(ln.y), int(ln.x1), int(y1)],
+        "text":      ln.text,
+        "font_px":   int(ln.font_px),
+        "direction": ln.direction,
+        "font_name": ln.font_name,
+        "color": {
+            "rgb":  [int(ln.fg[0]), int(ln.fg[1]), int(ln.fg[2])],
+            "name": ln.color_name,
+        },
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -110,6 +162,10 @@ def run_poster_pipeline(
     complexity_thresh: float = 0.50,
     min_area_ratio:    float = 0.03,  # 全图可写面积下限
     max_zones:         int   = 3,     # 最多使用几个排版区域
+    # ── 字号层级 & 配色 ───────────────────────────────────────────────────
+    n_tiers:           Optional[int] = None,   # 1~3；None 表示每张图随机
+    seed:              Optional[int] = None,   # 随机种子（控制层级数、颜色选择）
+    color_min_contrast: float = 4.5,
 ) -> Dict[str, Any]:
     """
     参数：
@@ -169,8 +225,12 @@ def run_poster_pipeline(
                 "combined_mask": combined}
 
     # ── 3. 字号层级：基础字号受短边 1/8 限制，最小为 font_px_min ────────
+    rng = random.Random(seed)
+    tiers = n_tiers if n_tiers is not None else rng.randint(1, 3)
+    tiers = max(1, min(3, tiers))
     font_px_base = max(font_px_min, min(font_px, min(h, w) // 8))
-    all_levels   = _font_levels(font_px_base, font_px_min)
+    all_levels   = _font_levels(font_px_base, font_px_min, n_tiers=tiers)
+    debug["n_tiers"] = tiers
 
     # ── 4. 策略打分 → 选最优布局 → 提取区域 ─────────────────────────────
     zones, strategy_name = find_text_zones(
@@ -188,11 +248,20 @@ def run_poster_pipeline(
 
     # ── 5. 逐区层次排版 ────────────────────────────────────────────────────
     all_lines = []
+    anchor_id: Optional[int] = None   # 一张图内尽量沿用同一色卡项
 
     for zone_idx, zone in enumerate(zones):
-        # 每区背景色采样文字颜色
-        fr, fg_v, fb, _br, _bg, _bb = contrast_text_rgb(rgb, zone.mask)
-        zone_fg = (fr, fg_v, fb)
+        # 色卡采样：优先沿用 anchor（对比足够时），否则按对比度重新挑一个
+        color = contrast_from_palette(
+            rgb, zone.mask,
+            rng=rng,
+            anchor_id=anchor_id,
+            min_ratio=color_min_contrast,
+        )
+        if anchor_id is None:
+            anchor_id = color["id"]
+        zone_fg    = tuple(int(v) for v in color["rgb"])
+        color_name = color["name"]
 
         # 构造该区字号序列（主区从最大级别开始，次区从次级开始）
         schedule = _zone_schedule(all_levels, font_px_min, zone_idx, max_slots=7)
@@ -219,6 +288,7 @@ def run_poster_pipeline(
             font_px=font_px_min,   # 回退值，实际由 slot.font_px 控制
             align=zone.align,
             fg=zone_fg,
+            color_name=color_name,
         )
         all_lines.extend(zone_lines)
 
@@ -243,6 +313,7 @@ def run_poster_pipeline(
         for z in zones
     ]
     debug["lines"] = [asdict(x) for x in all_lines]
+    debug["texts"] = [_text_meta(ln) for ln in all_lines]
 
     return {
         "debug":         debug,

@@ -17,6 +17,7 @@
 """
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass, field
 from typing import List, Optional, Tuple
 
@@ -54,6 +55,8 @@ class TextLine:
     align: str     = "left"            # "left" / "center" / "right"（横排有效）
     fg: Tuple[int, int, int] = (248, 250, 252)   # 文字颜色（per-line）
     font_px: int   = 48                # 该行字号（per-line，支持层次大小）
+    font_name: str = ""                # 实际加载到的字体文件名（不含路径）
+    color_name: str = ""               # 文字颜色的可读名称（中/英随机，来自色卡）
 
 
 # ---------------------------------------------------------------------------
@@ -61,8 +64,15 @@ class TextLine:
 # ---------------------------------------------------------------------------
 
 def _load_font(font_path: Optional[str], font_px: int):
+    """返回加载成功的 PIL Font；见 _load_font_named 获取字体名。"""
+    font, _name = _load_font_named(font_path, font_px)
+    return font
+
+
+def _load_font_named(font_path: Optional[str], font_px: int):
+    """返回 (font, font_name)。font_name 是实际加载到的字体文件名（basename）。"""
     if ImageFont is None:
-        return None
+        return None, ""
     candidates = list(filter(None, [font_path])) + [
         "/System/Library/Fonts/STHeiti Medium.ttc",
         "/System/Library/Fonts/PingFang.ttc",
@@ -71,10 +81,11 @@ def _load_font(font_path: Optional[str], font_px: int):
     ]
     for p in candidates:
         try:
-            return ImageFont.truetype(p, font_px)
+            f = ImageFont.truetype(p, font_px)
+            return f, os.path.basename(p)
         except Exception:
             continue
-    return ImageFont.load_default()
+    return ImageFont.load_default(), "default"
 
 
 def _text_width(text: str, font) -> int:
@@ -281,6 +292,7 @@ def fill_slots(
     font_px: int = 48,             # 字号回退值（slot.font_px == 0 时使用）
     align: str = "left",
     fg: Tuple[int, int, int] = (248, 250, 252),
+    color_name: str = "",
 ) -> List[TextLine]:
     """
     将 corpus 分配到槽位，返回 TextLine 列表。
@@ -296,13 +308,21 @@ def fill_slots(
     if not slots or not corpus.strip():
         return []
 
-    # 按字号缓存字体
+    # 按字号缓存字体及其文件名
     _font_cache: dict = {}
+    _fname_cache: dict = {}
 
     def _get_font(px: int):
         if px not in _font_cache:
-            _font_cache[px] = _load_font(font_path, px)
+            f, name = _load_font_named(font_path, px)
+            _font_cache[px] = f
+            _fname_cache[px] = name
         return _font_cache[px]
+
+    def _get_fname(px: int) -> str:
+        if px not in _fname_cache:
+            _get_font(px)
+        return _fname_cache.get(px, "")
 
     lines: List[TextLine] = []
     words = corpus.split()
@@ -340,6 +360,8 @@ def fill_slots(
                     text=_join_words(line_words),
                     direction="h", align=align, fg=fg,
                     font_px=slot_fpx,
+                    font_name=_get_fname(slot_fpx),
+                    color_name=color_name,
                 ))
 
         else:  # direction == "v"
@@ -352,6 +374,8 @@ def fill_slots(
                     text=chunk,
                     direction="v", align=align, fg=fg,
                     font_px=slot_fpx,
+                    font_name=_get_fname(slot_fpx),
+                    color_name=color_name,
                 ))
 
     return lines

@@ -2,17 +2,14 @@
   "complexity_thresh": 0.5,
   "dilate_iter": 14,
   "comp_dilate_iter": 6,
-  "writable_ratio": 0.295,
+  "writable_ratio": 0.403,
+  "n_tiers": 1,
   "strategy": "bottom_only",
   "n_lines": 2,
   "font_px_base": 28,
   "font_px_min": 24,
   "font_levels": [
-    64,
-    48,
-    40,
-    32,
-    24
+    48
   ],
   "zones": [
     {
@@ -20,43 +17,89 @@
       "direction": "h",
       "align": "center",
       "scan_style": "h_bottom",
-      "score": 0.1487,
+      "score": 0.167,
       "bbox": [
         247,
-        427,
-        0,
-        640
+        421,
+        6,
+        634
       ]
     }
   ],
   "lines": [
     {
-      "y": 256,
-      "x0": 496,
-      "x1": 634,
+      "y": 252,
+      "x0": 495,
+      "x1": 628,
       "text": "华为",
       "direction": "h",
       "align": "center",
       "fg": [
-        248,
-        250,
-        252
+        255,
+        255,
+        255
       ],
-      "font_px": 64
+      "font_px": 48,
+      "font_name": "STHeiti Medium.ttc",
+      "color_name": "snow"
     },
     {
-      "y": 387,
-      "x0": 292,
-      "x1": 634,
-      "text": "智慧生活影像旗舰",
+      "y": 364,
+      "x0": 301,
+      "x1": 628,
+      "text": "智慧生活",
       "direction": "h",
       "align": "center",
       "fg": [
-        248,
-        250,
-        252
+        255,
+        255,
+        255
       ],
-      "font_px": 40
+      "font_px": 48,
+      "font_name": "STHeiti Medium.ttc",
+      "color_name": "snow"
+    }
+  ],
+  "texts": [
+    {
+      "bbox": [
+        495,
+        252,
+        628,
+        300
+      ],
+      "text": "华为",
+      "font_px": 48,
+      "direction": "h",
+      "font_name": "STHeiti Medium.ttc",
+      "color": {
+        "rgb": [
+          255,
+          255,
+          255
+        ],
+        "name": "snow"
+      }
+    },
+    {
+      "bbox": [
+        301,
+        364,
+        628,
+        412
+      ],
+      "text": "智慧生活",
+      "font_px": 48,
+      "direction": "h",
+      "font_name": "STHeiti Medium.ttc",
+      "color": {
+        "rgb": [
+          255,
+          255,
+          255
+        ],
+        "name": "snow"
+      }
     }
   ]
 }

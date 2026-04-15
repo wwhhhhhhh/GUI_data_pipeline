@@ -94,8 +94,8 @@ def dilate_binary(mask: np.ndarray, iterations: int = 3) -> np.ndarray:
 def complexity_map(
     rgb: np.ndarray,
     *,
-    smooth_sigma: float = 0.0,   # 0 = 自动（图像短边的 1/8）
-    lap_win: int = 21,            # 拉普拉斯窗口，比之前 5 大，捕捉更宽纹理
+    smooth_sigma: float = 0.0,   # 0 = 自动（图像短边的 1/16，范围 [12, 40]）
+    lap_win: int = 9,             # 拉普拉斯窗口，较小以减少区域间串扰
 ) -> np.ndarray:
     """
     计算全图区域级复杂度，值域 [0, 1]。
@@ -111,20 +111,22 @@ def complexity_map(
           工具台/树枝等密集纹理区 → 接近 1（不适合写字）
     """
     h, w = rgb.shape[:2]
-    # 平滑半径自适应图像尺寸：短边 1/8，最小 20px，最大 80px
+    # 平滑半径自适应图像尺寸：短边 1/16，范围 [12, 40]
+    # （旧实现 1/8 + lap_win=21 会把高纹理能量远程扩散，使低复杂区看起来向图像中心偏移；
+    #   减半 sigma + 更小 lap_win 让复杂度边界与实际纹理贴合。）
     sigma = smooth_sigma if smooth_sigma > 0 else float(
-        max(20, min(80, min(h, w) // 8))
+        max(12, min(40, min(h, w) // 16))
     )
 
     gray = rgb_to_gray(rgb)
 
-    # Sobel 梯度 → 大高斯平滑
+    # Sobel 梯度 → 高斯平滑（truncate 收紧以减少边缘处的反射偏差）
     gmag = _sobel_mag(gray)
-    gmag_s = _ndi.gaussian_filter(gmag, sigma=sigma)
+    gmag_s = _ndi.gaussian_filter(gmag, sigma=sigma, truncate=3.0)
 
-    # Laplacian 能量 → 大高斯平滑（lap_win 比之前大，覆盖更多纹理）
+    # Laplacian 能量 → 同样的平滑
     lap = _lap_energy(gray, win=lap_win)
-    lap_s = _ndi.gaussian_filter(lap, sigma=sigma)
+    lap_s = _ndi.gaussian_filter(lap, sigma=sigma, truncate=3.0)
 
     c = _normalize01(gmag_s) * 0.6 + _normalize01(lap_s) * 0.4
     return np.clip(c, 0.0, 1.0).astype(np.float32)
@@ -164,7 +166,12 @@ def build_writable(
     forb = dilate_binary(subj, iterations=dilate_iter)
     comp = complexity_map(rgb)
     comp_low = comp <= complexity_thresh
+    # 对低复杂度掩码使用形态学 closing（dilate → erode）取代单向膨胀：
+    # 能填掉高纹理区域留下的小孔、平滑锯齿边界，同时不让可写区整体外扩（避免偏移感）。
     if comp_dilate_iter > 0:
-        comp_low = dilate_binary(comp_low, iterations=comp_dilate_iter)
+        struct = np.ones((3, 3), dtype=bool)
+        comp_low = _ndi.binary_closing(
+            comp_low, structure=struct, iterations=comp_dilate_iter,
+        )
     writable = (~forb) & comp_low
     return writable, comp, subj, forb

@@ -1,9 +1,12 @@
-"""区域内中位色 + 简单反差字色（亮底深字 / 暗底亮字）。"""
+"""区域内中位色 + 基于色卡的反差字色选择。"""
 from __future__ import annotations
 
-from typing import Tuple
+import random
+from typing import Dict, Optional, Tuple
 
 import numpy as np
+
+from .color_palette import pick_contrast_color
 
 
 def rgb_median(rgb: np.ndarray, mask: np.ndarray) -> Tuple[float, float, float]:
@@ -35,3 +38,47 @@ def contrast_text_rgb(rgb: np.ndarray, mask: np.ndarray) -> Tuple[int, int, int,
     else:
         fg = (248, 250, 252)
     return (*fg, int(br), int(bg), int(bb))
+
+
+def contrast_from_palette(
+    rgb: np.ndarray,
+    mask: np.ndarray,
+    *,
+    rng: Optional[random.Random] = None,
+    anchor_id: Optional[int] = None,
+    min_ratio: float = 4.5,
+    top_k: int = 8,
+) -> Dict:
+    """
+    基于色卡的对比色挑选。
+
+    Args:
+      rgb       — 源图 HxWx3 uint8
+      mask      — 区域 mask（bool HxW），用来采样区域内中位色作为"背景色"
+      rng       — 随机源（保证可复现）
+      anchor_id — 若给定则优先复用该 id（保证一张图内颜色一致），
+                  只有当该 id 与当前区域背景对比度仍 ≥ min_ratio 时才沿用；
+                  否则重新挑一个并返回新 id。
+      min_ratio — 最低 WCAG 对比度（默认 4.5，常规正文阅读门槛）
+      top_k     — 从对比度最高的 top_k 个里随机挑
+
+    Returns: dict {id, hex, rgb, name, name_zh, name_en, contrast, bg_rgb}
+    """
+    rng = rng or random.Random()
+    br, bg_v, bb = rgb_median(rgb, mask)
+    bg_rgb = (br, bg_v, bb)
+
+    if anchor_id is not None:
+        from .color_palette import PALETTE, contrast_ratio as _cr
+        anchor = next((p for p in PALETTE if p["id"] == anchor_id), None)
+        if anchor is not None:
+            ratio = _cr(anchor["rgb"], bg_rgb)
+            if ratio >= min_ratio:
+                from .color_palette import _annotate
+                out = _annotate(anchor, rng, ratio)
+                out["bg_rgb"] = (int(br), int(bg_v), int(bb))
+                return out
+
+    chosen = pick_contrast_color(bg_rgb, rng, min_ratio=min_ratio, top_k=top_k)
+    chosen["bg_rgb"] = (int(br), int(bg_v), int(bb))
+    return chosen

@@ -2,117 +2,104 @@
   "complexity_thresh": 0.5,
   "dilate_iter": 14,
   "comp_dilate_iter": 6,
-  "writable_ratio": 0.42,
-  "strategy": "top_only",
-  "n_lines": 6,
+  "writable_ratio": 0.64,
+  "n_tiers": 1,
+  "strategy": "center",
+  "n_lines": 2,
   "font_px_base": 28,
   "font_px_min": 24,
   "font_levels": [
-    64,
-    48,
-    40,
-    32,
-    24
+    48
   ],
   "zones": [
     {
-      "position": "top",
+      "position": "center",
       "direction": "h",
       "align": "center",
-      "scan_style": "h_top",
-      "score": 0.1713,
+      "scan_style": "h_center",
+      "score": 0.1998,
       "bbox": [
-        0,
-        268,
-        143,
-        427
+        140,
+        499,
+        64,
+        362
       ]
     }
   ],
   "lines": [
     {
-      "y": 0,
-      "x0": 201,
-      "x1": 421,
+      "y": 144,
+      "x0": 249,
+      "x1": 356,
       "text": "华为",
       "direction": "h",
       "align": "center",
       "fg": [
-        248,
-        250,
-        252
+        0,
+        0,
+        128
       ],
-      "font_px": 64
+      "font_px": 48,
+      "font_name": "STHeiti Medium.ttc",
+      "color_name": "暗蓝色"
     },
     {
-      "y": 75,
-      "x0": 204,
-      "x1": 421,
+      "y": 200,
+      "x0": 143,
+      "x1": 356,
       "text": "智慧生活",
       "direction": "h",
       "align": "center",
       "fg": [
-        248,
-        250,
-        252
+        0,
+        0,
+        128
       ],
-      "font_px": 48
+      "font_px": 48,
+      "font_name": "STHeiti Medium.ttc",
+      "color_name": "暗蓝色"
+    }
+  ],
+  "texts": [
+    {
+      "bbox": [
+        249,
+        144,
+        356,
+        192
+      ],
+      "text": "华为",
+      "font_px": 48,
+      "direction": "h",
+      "font_name": "STHeiti Medium.ttc",
+      "color": {
+        "rgb": [
+          0,
+          0,
+          128
+        ],
+        "name": "暗蓝色"
+      }
     },
     {
-      "y": 131,
-      "x0": 204,
-      "x1": 421,
-      "text": "影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
+      "bbox": [
+        143,
+        200,
+        356,
+        248
       ],
-      "font_px": 40
-    },
-    {
-      "y": 178,
-      "x0": 162,
-      "x1": 421,
-      "text": "极致性能",
+      "text": "智慧生活",
+      "font_px": 48,
       "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 32
-    },
-    {
-      "y": 215,
-      "x0": 150,
-      "x1": 421,
-      "text": "华为智慧生活影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 24
-    },
-    {
-      "y": 243,
-      "x0": 151,
-      "x1": 421,
-      "text": "极致性能",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        248,
-        250,
-        252
-      ],
-      "font_px": 24
+      "font_name": "STHeiti Medium.ttc",
+      "color": {
+        "rgb": [
+          0,
+          0,
+          128
+        ],
+        "name": "暗蓝色"
+      }
     }
   ]
 }
