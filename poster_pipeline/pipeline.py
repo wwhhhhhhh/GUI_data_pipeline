@@ -485,6 +485,14 @@ def run_multi_layouts(
                 continue
             seen_signatures.add(sig)
 
+            raw_boxes = []
+            for s in all_slots:
+                if s.direction == "v":
+                    y1 = s.y + s.height
+                else:
+                    y1 = s.y + s.font_px
+                raw_boxes.append([int(s.x0), int(s.y), int(s.x1), int(y1)])
+
             idx = len(layouts)
             layouts.append({
                 f"layout{idx}": {
@@ -492,6 +500,7 @@ def run_multi_layouts(
                     "scaled_boxes_1024h":   _slots_to_scaled_boxes(
                         all_slots, img_h=h, target_h=1024,
                     ),
+                    "raw_boxes": raw_boxes,
                 }
             })
             if len(layouts) >= max_layouts:
