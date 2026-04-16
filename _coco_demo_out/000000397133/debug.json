@@ -5,7 +5,7 @@
   "writable_ratio": 0.403,
   "n_tiers": 1,
   "strategy": "bottom_only",
-  "n_lines": 2,
+  "n_lines": 1,
   "font_px_base": 28,
   "font_px_min": 24,
   "font_levels": [
@@ -29,41 +29,25 @@
   "lines": [
     {
       "y": 252,
-      "x0": 495,
+      "x0": 496,
       "x1": 628,
       "text": "华为",
       "direction": "h",
       "align": "center",
       "fg": [
+        127,
         255,
-        255,
-        255
+        212
       ],
       "font_px": 48,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "snow"
-    },
-    {
-      "y": 364,
-      "x0": 301,
-      "x1": 628,
-      "text": "智慧生活",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        255,
-        255,
-        255
-      ],
-      "font_px": 48,
-      "font_name": "STHeiti Medium.ttc",
-      "color_name": "snow"
+      "color_name": "碧绿色"
     }
   ],
   "texts": [
     {
       "bbox": [
-        495,
+        496,
         252,
         628,
         300
@@ -74,31 +58,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
+          127,
           255,
-          255,
-          255
+          212
         ],
-        "name": "snow"
-      }
-    },
-    {
-      "bbox": [
-        301,
-        364,
-        628,
-        412
-      ],
-      "text": "智慧生活",
-      "font_px": 48,
-      "direction": "h",
-      "font_name": "STHeiti Medium.ttc",
-      "color": {
-        "rgb": [
-          255,
-          255,
-          255
-        ],
-        "name": "snow"
+        "name": "碧绿色"
       }
     }
   ]

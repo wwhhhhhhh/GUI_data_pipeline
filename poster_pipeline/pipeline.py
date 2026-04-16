@@ -274,6 +274,7 @@ def run_poster_pipeline(
         slots = plan_hierarchical(
             zone.mask, schedule, zone.direction,
             side=v_side,
+            align=zone.align,
             margin=6,
             min_width_chars=2,
             min_height_chars=2,

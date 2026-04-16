@@ -230,12 +230,162 @@ def _v_slots_hierarchical(
     return slots
 
 
+def _align_h_slots(slots: List[LineSlot], align: str) -> List[LineSlot]:
+    """
+    横排槽对齐：同字号行的 x0/x1 对齐，跨字号行按 align 方向吸附。
+
+    两级对齐：
+      1. 同字号组：取所有 [x0,x1] 的交集作为统一范围（交集不够宽则退化到单边对齐）
+      2. 跨字号：按 align 方向将所有组的对齐边吸附到全局锚点。
+         - "left"   → 全局左边缘一致；右边缘随各行宽度自然变化
+         - "right"  → 全局右边缘一致；左边缘自然变化
+         - "center" → 全局中心一致；两侧对称自然变化
+    """
+    if len(slots) <= 1:
+        return slots
+
+    from collections import defaultdict
+    tier_groups: dict = defaultdict(list)
+    for i, s in enumerate(slots):
+        tier_groups[s.font_px].append(i)
+
+    result = [LineSlot(y=s.y, x0=s.x0, x1=s.x1, height=s.height,
+                       direction=s.direction, font_px=s.font_px)
+              for s in slots]
+
+    # ── 第一级：同字号组内对齐 ──────────────────────────────────────────
+    tier_anchors: dict = {}   # font_px → (x0, x1, center)
+    for fpx, indices in tier_groups.items():
+        group = [slots[i] for i in indices]
+        common_x0 = max(s.x0 for s in group)
+        common_x1 = min(s.x1 for s in group)
+
+        if common_x1 - common_x0 >= fpx * 2:
+            for idx in indices:
+                result[idx].x0 = common_x0
+                result[idx].x1 = common_x1
+            tier_anchors[fpx] = (common_x0, common_x1)
+        elif len(indices) > 1:
+            if align == "right":
+                for idx in indices:
+                    result[idx].x1 = common_x1
+                tier_anchors[fpx] = (min(s.x0 for s in group), common_x1)
+            elif align == "center":
+                avg_c = int(sum((s.x0 + s.x1) for s in group) / (2 * len(group)))
+                min_hw = min(s.x1 - s.x0 for s in group) // 2
+                for idx in indices:
+                    result[idx].x0 = avg_c - min_hw
+                    result[idx].x1 = avg_c + min_hw
+                tier_anchors[fpx] = (avg_c - min_hw, avg_c + min_hw)
+            else:
+                for idx in indices:
+                    result[idx].x0 = common_x0
+                tier_anchors[fpx] = (common_x0, max(s.x1 for s in group))
+        else:
+            s = result[indices[0]]
+            tier_anchors[fpx] = (s.x0, s.x1)
+
+    # ── 第二级：跨字号对齐边吸附 ──────────────────────────────────────
+    # 保存第一级对齐后的结果作为跨层级钳位的合法范围
+    tier1_bounds = [(s.x0, s.x1) for s in result]
+
+    if len(tier_anchors) >= 2:
+        if align == "left":
+            global_x0 = max(a[0] for a in tier_anchors.values())
+            for i, s in enumerate(result):
+                if s.x1 - global_x0 >= s.font_px * 2:
+                    result[i].x0 = global_x0
+        elif align == "right":
+            global_x1 = min(a[1] for a in tier_anchors.values())
+            for i, s in enumerate(result):
+                if global_x1 - s.x0 >= s.font_px * 2:
+                    result[i].x1 = global_x1
+        else:  # center
+            # 以最窄层级的中心为锚点，让更宽的层级向它对齐
+            narrowest_fpx = min(tier_anchors, key=lambda k: tier_anchors[k][1] - tier_anchors[k][0])
+            na = tier_anchors[narrowest_fpx]
+            anchor_center = (na[0] + na[1]) // 2
+
+            for i, s in enumerate(result):
+                half_w = (s.x1 - s.x0) // 2
+                new_x0 = anchor_center - half_w
+                new_x1 = anchor_center + half_w
+                lo, hi = tier1_bounds[i]
+                if new_x0 < lo:
+                    new_x1 += lo - new_x0; new_x0 = lo
+                if new_x1 > hi:
+                    new_x0 -= new_x1 - hi; new_x1 = hi
+                new_x0 = max(lo, new_x0)
+                result[i].x0 = new_x0
+                result[i].x1 = new_x1
+
+    return result
+
+
+def _align_v_slots(slots: List[LineSlot], align: str) -> List[LineSlot]:
+    """
+    竖排槽对齐：同字号列的 y / (y+height) 对齐。
+
+    两级对齐：
+      1. 同字号组：取 y 范围交集（统一起止行号）
+      2. 跨字号：top-对齐（所有列从相同 y 开始）或 center / bottom
+    """
+    if len(slots) <= 1:
+        return slots
+
+    from collections import defaultdict
+    tier_groups: dict = defaultdict(list)
+    for i, s in enumerate(slots):
+        tier_groups[s.font_px].append(i)
+
+    result = [LineSlot(y=s.y, x0=s.x0, x1=s.x1, height=s.height,
+                       direction=s.direction, font_px=s.font_px)
+              for s in slots]
+
+    # ── 第一级：同字号组内对齐 ──────────────────────────────────────────
+    tier_anchors: dict = {}   # font_px → (y0, y1)
+    for fpx, indices in tier_groups.items():
+        group = [slots[i] for i in indices]
+        common_y0 = max(s.y for s in group)
+        common_y1 = min(s.y + s.height for s in group)
+
+        if common_y1 - common_y0 >= fpx * 2:
+            for idx in indices:
+                result[idx].y = common_y0
+                result[idx].height = common_y1 - common_y0
+            tier_anchors[fpx] = (common_y0, common_y1)
+        else:
+            for idx in indices:
+                s = slots[idx]
+                tier_anchors[fpx] = (s.y, s.y + s.height)
+
+    # ── 第二级：跨字号对齐 ──────────────────────────────────────────────
+    if len(tier_anchors) >= 2:
+        if align in ("left", "right"):
+            global_y0 = max(a[0] for a in tier_anchors.values())
+            for i, s in enumerate(result):
+                if s.y + s.height - global_y0 >= s.font_px * 2:
+                    new_h = s.y + s.height - global_y0
+                    result[i].y = global_y0
+                    result[i].height = new_h
+        else:  # center
+            all_cy = [((a[0] + a[1]) / 2) for a in tier_anchors.values()]
+            global_cy = int(sum(all_cy) / len(all_cy))
+            for i, s in enumerate(result):
+                half_h = s.height // 2
+                result[i].y = global_cy - half_h
+                result[i].height = half_h * 2
+
+    return result
+
+
 def plan_hierarchical(
     mask: np.ndarray,
     size_schedule: List[int],
     direction: str,
     *,
     side: str = "right",            # 竖排有效："right" | "left"
+    align: str = "left",            # 对齐方式："left" | "center" | "right"
     margin: int = 6,
     min_width_chars: int = 2,
     min_height_chars: int = 2,
@@ -244,7 +394,7 @@ def plan_hierarchical(
     max_slots: int = 6,
 ) -> List[LineSlot]:
     """
-    层次字号扫描：根据 size_schedule 在 mask 中规划 LineSlot 列表。
+    层次字号扫描 + 跨行/列对齐。
 
     参数：
       mask          — bool HxW，可写区域
@@ -252,6 +402,7 @@ def plan_hierarchical(
                       每个元素对应一行/列的目标字号
       direction     — "h" 横排 | "v" 竖排
       side          — 竖排时从哪侧开始（"right" | "left"）
+      align         — 对齐方式（同层级行/列按该方向对齐 bbox 边缘）
       margin        — 槽位与可写边界之间的内缩像素
       min_width_chars  — 横排最少容纳字符数（× font_px 得到最小宽度）
       min_height_chars — 竖排最少容纳字符数（× font_px 得到最小高度）
@@ -260,15 +411,17 @@ def plan_hierarchical(
       max_slots     — 最多返回几个槽位
     """
     if direction == "h":
-        return _h_slots_hierarchical(
+        slots = _h_slots_hierarchical(
             mask, size_schedule, margin, min_width_chars,
             line_gap_ratio, max_slots,
         )
+        return _align_h_slots(slots, align)
     else:
-        return _v_slots_hierarchical(
+        slots = _v_slots_hierarchical(
             mask, size_schedule, margin, min_height_chars,
             col_gap_ratio, max_slots, side,
         )
+        return _align_v_slots(slots, align)
 
 
 # ---------------------------------------------------------------------------

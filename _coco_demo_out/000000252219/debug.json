@@ -36,45 +36,45 @@
       "direction": "h",
       "align": "center",
       "fg": [
+        204,
         255,
-        255,
-        255
+        0
       ],
       "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "white"
+      "color_name": "fluorescent yellow-green"
     },
     {
       "y": 91,
       "x0": 383,
-      "x1": 628,
+      "x1": 519,
       "text": "智慧生活",
       "direction": "h",
       "align": "center",
       "fg": [
+        204,
         255,
-        255,
-        255
+        0
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "white"
+      "color_name": "fluorescent yellow-green"
     },
     {
       "y": 128,
-      "x0": 218,
-      "x1": 520,
-      "text": "影像旗舰极致性能",
+      "x0": 383,
+      "x1": 519,
+      "text": "影像旗舰",
       "direction": "h",
       "align": "center",
       "fg": [
+        204,
         255,
-        255,
-        255
+        0
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "white"
+      "color_name": "fluorescent yellow-green"
     }
   ],
   "texts": [
@@ -91,18 +91,18 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
+          204,
           255,
-          255,
-          255
+          0
         ],
-        "name": "white"
+        "name": "fluorescent yellow-green"
       }
     },
     {
       "bbox": [
         383,
         91,
-        628,
+        519,
         123
       ],
       "text": "智慧生活",
@@ -111,31 +111,31 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
+          204,
           255,
-          255,
-          255
+          0
         ],
-        "name": "white"
+        "name": "fluorescent yellow-green"
       }
     },
     {
       "bbox": [
-        218,
+        383,
         128,
-        520,
+        519,
         160
       ],
-      "text": "影像旗舰极致性能",
+      "text": "影像旗舰",
       "font_px": 32,
       "direction": "h",
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
+          204,
           255,
-          255,
-          255
+          0
         ],
-        "name": "white"
+        "name": "fluorescent yellow-green"
       }
     }
   ]

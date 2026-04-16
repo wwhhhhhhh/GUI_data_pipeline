@@ -36,45 +36,45 @@
       "direction": "h",
       "align": "center",
       "fg": [
-        127,
-        255,
-        212
+        230,
+        230,
+        250
       ],
       "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "绿玉"
+      "color_name": "淡紫色"
     },
     {
       "y": 427,
-      "x0": 33,
-      "x1": 628,
+      "x0": 35,
+      "x1": 627,
       "text": "智慧生活影像旗舰极致性能",
       "direction": "h",
       "align": "center",
       "fg": [
-        127,
-        255,
-        212
+        230,
+        230,
+        250
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "绿玉"
+      "color_name": "淡紫色"
     },
     {
       "y": 464,
       "x0": 35,
-      "x1": 628,
+      "x1": 627,
       "text": "华为智慧生活影像旗舰极致性能",
       "direction": "h",
       "align": "center",
       "fg": [
-        127,
-        255,
-        212
+        230,
+        230,
+        250
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "绿玉"
+      "color_name": "淡紫色"
     }
   ],
   "texts": [
@@ -91,18 +91,18 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          127,
-          255,
-          212
+          230,
+          230,
+          250
         ],
-        "name": "绿玉"
+        "name": "淡紫色"
       }
     },
     {
       "bbox": [
-        33,
+        35,
         427,
-        628,
+        627,
         459
       ],
       "text": "智慧生活影像旗舰极致性能",
@@ -111,18 +111,18 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          127,
-          255,
-          212
+          230,
+          230,
+          250
         ],
-        "name": "绿玉"
+        "name": "淡紫色"
       }
     },
     {
       "bbox": [
         35,
         464,
-        628,
+        627,
         496
       ],
       "text": "华为智慧生活影像旗舰极致性能",
@@ -131,11 +131,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          127,
-          255,
-          212
+          230,
+          230,
+          250
         ],
-        "name": "绿玉"
+        "name": "淡紫色"
       }
     }
   ]
