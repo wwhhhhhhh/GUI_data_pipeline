@@ -42,7 +42,7 @@
       ],
       "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "fluorescent yellow-green"
+      "color_name": "荧光黄绿色"
     },
     {
       "y": 91,
@@ -58,7 +58,7 @@
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "fluorescent yellow-green"
+      "color_name": "荧光黄绿色"
     },
     {
       "y": 128,
@@ -74,7 +74,7 @@
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "fluorescent yellow-green"
+      "color_name": "荧光黄绿色"
     }
   ],
   "texts": [
@@ -95,7 +95,7 @@
           255,
           0
         ],
-        "name": "fluorescent yellow-green"
+        "name": "荧光黄绿色"
       }
     },
     {
@@ -115,7 +115,7 @@
           255,
           0
         ],
-        "name": "fluorescent yellow-green"
+        "name": "荧光黄绿色"
       }
     },
     {
@@ -135,7 +135,7 @@
           255,
           0
         ],
-        "name": "fluorescent yellow-green"
+        "name": "荧光黄绿色"
       }
     }
   ]

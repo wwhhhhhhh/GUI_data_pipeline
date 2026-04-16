@@ -17,7 +17,7 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
-from .auto_layout import find_text_zones
+from .auto_layout import find_text_zones, rank_strategies, zones_for_strategy
 from .color_contrast import contrast_from_palette
 from .layout_scanline import fill_slots, plan_hierarchical, render_lines
 from .writable_mask import build_writable
@@ -332,3 +332,181 @@ def run_poster_pipeline(
 def save_debug_json(path: str, debug: Dict[str, Any]) -> None:
     with open(path, "w", encoding="utf-8") as f:
         json.dump(debug, f, ensure_ascii=False, indent=2)
+
+
+# ---------------------------------------------------------------------------
+# 多 layout 生成（bbox-only，不渲染不填文字）
+# ---------------------------------------------------------------------------
+
+def _slots_to_scaled_boxes(
+    slots,
+    *,
+    img_h: int,
+    target_h: int = 1024,
+) -> Dict[str, List[int]]:
+    """将 LineSlot 列表转为 scaled_boxes_1024h 格式。"""
+    scale = target_h / img_h
+    boxes: Dict[str, List[int]] = {}
+    for i, s in enumerate(slots):
+        if s.direction == "v":
+            y1 = s.y + s.height
+        else:
+            y1 = s.y + s.font_px
+        boxes[str(i)] = [
+            int(round(s.x0 * scale)),
+            int(round(s.y * scale)),
+            int(round(s.x1 * scale)),
+            int(round(y1 * scale)),
+        ]
+    return boxes
+
+
+def _slots_complexity(
+    slots,
+    comp: np.ndarray,
+) -> Dict[str, float]:
+    """计算每个 slot 区域内的平均复杂度（× 255 映射到 0–255 区间）。"""
+    result: Dict[str, float] = {}
+    for i, s in enumerate(slots):
+        if s.direction == "v":
+            y1 = s.y + s.height
+        else:
+            y1 = s.y + s.font_px
+        y0c = max(0, s.y); y1c = min(comp.shape[0], y1)
+        x0c = max(0, s.x0); x1c = min(comp.shape[1], s.x1)
+        if y1c > y0c and x1c > x0c:
+            val = float(comp[y0c:y1c, x0c:x1c].mean()) * 255.0
+        else:
+            val = 0.0
+        result[str(i)] = round(val, 2)
+    return result
+
+
+def run_multi_layouts(
+    rgb: np.ndarray,
+    masks: List[Dict[str, Any]],
+    *,
+    subject_labels:    Optional[set] = None,
+    font_px:           int   = 56,
+    font_px_min:       int   = 48,
+    dilate_iter:       int   = 14,
+    comp_dilate_iter:  int   = 6,
+    complexity_thresh: float = 0.50,
+    min_area_ratio:    float = 0.03,
+    max_zones:         int   = 3,
+    max_layouts:       int   = 10,
+    seed:              Optional[int] = None,
+) -> Dict[str, Any]:
+    """
+    生成多种 layout 方案（bbox-only，不渲染不填文字）。
+
+    为每种有效策略 × 每种层级数(1/2/3) 组合生成一个 layout，
+    取前 max_layouts 个。结果格式兼容目标 JSON 的 matched_layouts。
+
+    Returns dict:
+      matched_layouts — List[Dict]，每项 {"layoutN": {"low_level_complexity": {...},
+                        "scaled_boxes_1024h": {...}}}
+      writable        — bool HxW
+      complexity      — float32 HxW
+      subj_mask       — bool HxW
+      forb_mask       — bool HxW
+      debug           — 调试信息
+    """
+    h, w = rgb.shape[:2]
+    rng = random.Random(seed)
+
+    # ── 1. 共享的 writable + complexity ────────────────────────────────────
+    writable, comp, subj_mask, forb_mask = build_writable(
+        rgb, masks,
+        h=h, w=w,
+        forbid_labels=subject_labels,
+        label_key="label",
+        dilate_iter=dilate_iter,
+        complexity_thresh=complexity_thresh,
+        comp_dilate_iter=comp_dilate_iter,
+    )
+
+    writable_ratio = float(writable.sum()) / (h * w)
+    debug: Dict[str, Any] = {
+        "writable_ratio": round(writable_ratio, 3),
+        "img_size":       [w, h],
+    }
+
+    if writable_ratio < min_area_ratio:
+        debug["skip_reason"] = "writable area too small"
+        return {"matched_layouts": [], "writable": writable, "complexity": comp,
+                "subj_mask": subj_mask, "forb_mask": forb_mask, "debug": debug}
+
+    # ── 2. 排列候选策略 ────────────────────────────────────────────────────
+    ranked = rank_strategies(writable, comp)
+    font_px_base = max(font_px_min, min(font_px, min(h, w) // 8))
+
+    # ── 3. 策略 × 层级数 组合生成 layout ──────────────────────────────────
+    layouts: List[Dict] = []
+    seen_signatures: set = set()     # 去重：避免不同参数生成相同 bbox
+
+    for strat_name, strat_score in ranked:
+        if strat_score <= 0:
+            continue
+        zones = zones_for_strategy(
+            writable, comp, strat_name,
+            min_area_ratio=0.02, max_zones=max_zones,
+        )
+        if not zones:
+            continue
+
+        for n_tiers in [1, 2, 3]:
+            all_levels = _font_levels(font_px_base, font_px_min, n_tiers=n_tiers)
+            all_slots = []
+
+            for zone_idx, zone in enumerate(zones):
+                schedule = _zone_schedule(all_levels, font_px_min, zone_idx, max_slots=7)
+                v_side = (zone.scan_style.split("_", 1)[1]
+                          if zone.direction == "v" and "_" in zone.scan_style
+                          else "right")
+                slots = plan_hierarchical(
+                    zone.mask, schedule, zone.direction,
+                    side=v_side,
+                    align=zone.align,
+                    margin=6,
+                    min_width_chars=2,
+                    min_height_chars=2,
+                    max_slots=6,
+                )
+                all_slots.extend(slots)
+
+            if not all_slots:
+                continue
+
+            # 去重
+            sig = tuple((s.x0, s.y, s.x1, s.y + (s.height if s.direction == "v" else s.font_px))
+                        for s in all_slots)
+            if sig in seen_signatures:
+                continue
+            seen_signatures.add(sig)
+
+            idx = len(layouts)
+            layouts.append({
+                f"layout{idx}": {
+                    "low_level_complexity": _slots_complexity(all_slots, comp),
+                    "scaled_boxes_1024h":   _slots_to_scaled_boxes(
+                        all_slots, img_h=h, target_h=1024,
+                    ),
+                }
+            })
+            if len(layouts) >= max_layouts:
+                break
+        if len(layouts) >= max_layouts:
+            break
+
+    debug["n_layouts"]  = len(layouts)
+    debug["strategies"] = [(n, round(s, 4)) for n, s in ranked[:5]]
+
+    return {
+        "matched_layouts": layouts,
+        "writable":        writable,
+        "complexity":      comp,
+        "subj_mask":       subj_mask,
+        "forb_mask":       forb_mask,
+        "debug":           debug,
+    }

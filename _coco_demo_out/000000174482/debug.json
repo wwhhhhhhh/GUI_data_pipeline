@@ -3,14 +3,13 @@
   "dilate_iter": 14,
   "comp_dilate_iter": 6,
   "writable_ratio": 0.631,
-  "n_tiers": 2,
+  "n_tiers": 1,
   "strategy": "bottom_only",
-  "n_lines": 2,
+  "n_lines": 1,
   "font_px_base": 28,
   "font_px_min": 24,
   "font_levels": [
-    64,
-    32
+    48
   ],
   "zones": [
     {
@@ -29,9 +28,9 @@
   ],
   "lines": [
     {
-      "y": 240,
-      "x0": 461,
-      "x1": 627,
+      "y": 228,
+      "x0": 264,
+      "x1": 432,
       "text": "华为",
       "direction": "h",
       "align": "center",
@@ -40,37 +39,21 @@
         0,
         0
       ],
-      "font_px": 64,
+      "font_px": 48,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "黑"
-    },
-    {
-      "y": 315,
-      "x0": 13,
-      "x1": 303,
-      "text": "智慧生活影像旗舰",
-      "direction": "h",
-      "align": "center",
-      "fg": [
-        0,
-        0,
-        0
-      ],
-      "font_px": 32,
-      "font_name": "STHeiti Medium.ttc",
-      "color_name": "黑"
+      "color_name": "漆黑"
     }
   ],
   "texts": [
     {
       "bbox": [
-        461,
-        240,
-        627,
-        304
+        264,
+        228,
+        432,
+        276
       ],
       "text": "华为",
-      "font_px": 64,
+      "font_px": 48,
       "direction": "h",
       "font_name": "STHeiti Medium.ttc",
       "color": {
@@ -79,27 +62,7 @@
           0,
           0
         ],
-        "name": "黑"
-      }
-    },
-    {
-      "bbox": [
-        13,
-        315,
-        303,
-        347
-      ],
-      "text": "智慧生活影像旗舰",
-      "font_px": 32,
-      "direction": "h",
-      "font_name": "STHeiti Medium.ttc",
-      "color": {
-        "rgb": [
-          0,
-          0,
-          0
-        ],
-        "name": "黑"
+        "name": "漆黑"
       }
     }
   ]

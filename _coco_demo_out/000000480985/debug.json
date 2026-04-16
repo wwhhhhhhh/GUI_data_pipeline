@@ -3,13 +3,15 @@
   "dilate_iter": 14,
   "comp_dilate_iter": 6,
   "writable_ratio": 0.324,
-  "n_tiers": 1,
+  "n_tiers": 3,
   "strategy": "bottom_only",
   "n_lines": 1,
   "font_px_base": 28,
   "font_px_min": 24,
   "font_levels": [
-    48
+    64,
+    48,
+    32
   ],
   "zones": [
     {
@@ -28,41 +30,41 @@
   ],
   "lines": [
     {
-      "y": 396,
-      "x0": 141,
-      "x1": 255,
+      "y": 400,
+      "x0": 138,
+      "x1": 363,
       "text": "华为",
       "direction": "h",
       "align": "center",
       "fg": [
         0,
-        49,
-        83
+        71,
+        125
       ],
-      "font_px": 48,
+      "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "普鲁士蓝"
+      "color_name": "lapis lazuli"
     }
   ],
   "texts": [
     {
       "bbox": [
-        141,
-        396,
-        255,
-        444
+        138,
+        400,
+        363,
+        464
       ],
       "text": "华为",
-      "font_px": 48,
+      "font_px": 64,
       "direction": "h",
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
           0,
-          49,
-          83
+          71,
+          125
         ],
-        "name": "普鲁士蓝"
+        "name": "lapis lazuli"
       }
     }
   ]

@@ -37,13 +37,13 @@
       "direction": "h",
       "align": "center",
       "fg": [
-        0,
-        51,
-        153
+        77,
+        31,
+        0
       ],
       "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "钴蓝色"
+      "color_name": "coconut brown"
     }
   ],
   "texts": [
@@ -60,11 +60,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          0,
-          51,
-          153
+          77,
+          31,
+          0
         ],
-        "name": "钴蓝色"
+        "name": "coconut brown"
       }
     }
   ]

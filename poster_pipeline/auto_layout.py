@@ -284,3 +284,61 @@ def find_text_zones(
         z.font_scale = _FONT_SCALES[min(i, len(_FONT_SCALES) - 1)]
 
     return zones, best_name
+
+
+# ---------------------------------------------------------------------------
+# 多策略支持
+# ---------------------------------------------------------------------------
+
+def rank_strategies(
+    writable: np.ndarray,
+    complexity: np.ndarray,
+) -> List[Tuple[str, float]]:
+    """返回按得分降序排列的 (strategy_name, score) 列表（全部 11 种策略）。"""
+    h, w = writable.shape
+    return sorted(
+        [(name, _strategy_score(writable, h, w, zdefs))
+         for name, zdefs in STRATEGIES.items()],
+        key=lambda x: x[1],
+        reverse=True,
+    )
+
+
+def zones_for_strategy(
+    writable:       np.ndarray,
+    complexity:     np.ndarray,
+    strategy_name:  str,
+    *,
+    min_area_ratio: float = 0.02,
+    max_zones:      int   = 3,
+) -> List[TextZone]:
+    """为指定策略提取 TextZone 列表（不做策略选择，直接使用给定策略）。"""
+    h, w = writable.shape
+    min_px = max(16, int(min_area_ratio * h * w))
+    zone_defs = STRATEGIES.get(strategy_name, [])
+
+    zones: List[TextZone] = []
+    for zd in zone_defs:
+        region = _region_mask(h, w, zd)
+        zm     = writable & region
+        wpx    = int(zm.sum())
+        if wpx < min_px:
+            continue
+        ys, xs = np.where(zm)
+        y0 = int(ys.min()); y1 = int(ys.max()) + 1
+        x0 = int(xs.min()); x1 = int(xs.max()) + 1
+        scan      = str(zd["scan"])
+        direction = "v" if scan.startswith("v_") else "h"
+        avg_comp  = float(complexity[zm].mean())
+        score = (wpx / (h * w)) * (1.0 - avg_comp)
+        zones.append(TextZone(
+            mask=zm, direction=direction,
+            align=str(zd["align"]), position=str(zd["label"]),
+            scan_style=scan, score=score, bbox=(y0, y1, x0, x1),
+        ))
+
+    zones.sort(key=lambda z: z.score, reverse=True)
+    zones = zones[:max_zones]
+    for i, z in enumerate(zones):
+        z.font_scale = _FONT_SCALES[min(i, len(_FONT_SCALES) - 1)]
+    return zones

@@ -37,11 +37,11 @@
       "fg": [
         0,
         0,
-        0
+        128
       ],
       "font_px": 48,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "黑色"
+      "color_name": "海军蓝"
     }
   ],
   "texts": [
@@ -60,9 +60,9 @@
         "rgb": [
           0,
           0,
-          0
+          128
         ],
-        "name": "黑色"
+        "name": "海军蓝"
       }
     }
   ]

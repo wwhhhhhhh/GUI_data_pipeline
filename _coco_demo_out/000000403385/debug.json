@@ -36,13 +36,13 @@
       "direction": "h",
       "align": "center",
       "fg": [
-        230,
-        230,
-        250
+        255,
+        255,
+        255
       ],
       "font_px": 64,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "淡紫色"
+      "color_name": "snow"
     },
     {
       "y": 427,
@@ -52,13 +52,13 @@
       "direction": "h",
       "align": "center",
       "fg": [
-        230,
-        230,
-        250
+        255,
+        255,
+        255
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "淡紫色"
+      "color_name": "snow"
     },
     {
       "y": 464,
@@ -68,13 +68,13 @@
       "direction": "h",
       "align": "center",
       "fg": [
-        230,
-        230,
-        250
+        255,
+        255,
+        255
       ],
       "font_px": 32,
       "font_name": "STHeiti Medium.ttc",
-      "color_name": "淡紫色"
+      "color_name": "snow"
     }
   ],
   "texts": [
@@ -91,11 +91,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          230,
-          230,
-          250
+          255,
+          255,
+          255
         ],
-        "name": "淡紫色"
+        "name": "snow"
       }
     },
     {
@@ -111,11 +111,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          230,
-          230,
-          250
+          255,
+          255,
+          255
         ],
-        "name": "淡紫色"
+        "name": "snow"
       }
     },
     {
@@ -131,11 +131,11 @@
       "font_name": "STHeiti Medium.ttc",
       "color": {
         "rgb": [
-          230,
-          230,
-          250
+          255,
+          255,
+          255
         ],
-        "name": "淡紫色"
+        "name": "snow"
       }
     }
   ]
