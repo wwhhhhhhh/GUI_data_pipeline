@@ -41,7 +41,6 @@ if str(_ROOT) not in sys.path:
 from poster_pipeline.pipeline import (  # noqa: E402
     make_combined_mask,
     run_multi_layouts,
-    run_poster_pipeline,
     save_debug_json,
 )
 
@@ -178,7 +177,14 @@ def process_entry(
     out_entry = {}
     for k, v in entry.items():
         out_entry[k] = v
-    out_entry["matched_layouts"] = ml_result["matched_layouts"]
+    # 输出 JSON 中去掉 raw_boxes（仅用于可视化）
+    clean_layouts = []
+    for layout_dict in ml_result["matched_layouts"]:
+        clean = {}
+        for lk, lv in layout_dict.items():
+            clean[lk] = {k2: v2 for k2, v2 in lv.items() if k2 != "raw_boxes"}
+        clean_layouts.append(clean)
+    out_entry["matched_layouts"] = clean_layouts
 
     # ── 可选：保存图像 ────────────────────────────────────────────────
     if (save_images or save_debug_images) and out_dir is not None:
@@ -188,40 +194,46 @@ def process_entry(
         out_sub.mkdir(parents=True, exist_ok=True)
 
         if save_images:
-            # 跑一次完整 pipeline 获取渲染结果
-            full_result = run_poster_pipeline(
-                rgb, masks,
-                subject_labels    = subject_labels,
-                corpus_text       = CORPUS,
-                font_path         = font_path,
-                font_px           = font_px,
-                font_px_min       = font_px_min,
-                dilate_iter       = dilate_iter,
-                comp_dilate_iter  = comp_dilate_iter,
-                complexity_thresh = complexity_thresh,
-                min_area_ratio    = 0.03,
-                max_zones         = max_zones,
-            )
             _save_img(out_sub / "image.png", rgb)
-            _save_img(out_sub / "preview.png", full_result["preview"])
-            save_debug_json(str(out_sub / "debug.json"), full_result["debug"])
 
-            if save_debug_images:
-                combined = full_result.get("combined_mask")
-                if combined is not None:
-                    _save_img(out_sub / "combined_mask.png", combined)
-                forb = full_result.get("forb_mask")
-                if forb is not None:
-                    _save_img(out_sub / "subject_mask.png",
-                              forb.astype(np.uint8) * 255, is_color=False)
-                comp = full_result.get("complexity")
-                if comp is not None:
-                    _save_img(out_sub / "complexity_map.png",
-                              ((1.0 - comp) * 255).astype(np.uint8), is_color=False)
-                writable = full_result.get("writable")
-                if writable is not None:
-                    _save_img(out_sub / "writable_mask.png",
-                              writable.astype(np.uint8) * 255, is_color=False)
+            # 为每个 layout 画 bbox 可视化
+            _COLORS = [
+                (0, 200, 0), (200, 0, 0), (0, 0, 200),
+                (200, 200, 0), (200, 0, 200), (0, 200, 200),
+                (255, 128, 0), (128, 0, 255), (0, 255, 128),
+                (255, 255, 255),
+            ]
+            for li, layout_dict in enumerate(ml_result["matched_layouts"]):
+                layout_data = next(iter(layout_dict.values()))
+                raw_boxes = layout_data.get("raw_boxes", [])
+                vis = rgb.copy()
+                for bi, box in enumerate(raw_boxes):
+                    x0, y0, x1, y1 = box
+                    color = _COLORS[bi % len(_COLORS)]
+                    cv2.rectangle(vis, (x0, y0), (x1, y1), color, 3)
+                    label = f"{y1 - y0}px"
+                    cv2.putText(vis, label, (x0 + 4, y0 + 24),
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, color, 2)
+                _save_img(out_sub / f"layout_{li}.png", vis)
+
+            save_debug_json(str(out_sub / "debug.json"), ml_result["debug"])
+
+        if save_debug_images:
+            forb = ml_result.get("forb_mask")
+            if forb is not None:
+                _save_img(out_sub / "subject_mask.png",
+                          forb.astype(np.uint8) * 255, is_color=False)
+            comp = ml_result.get("complexity")
+            if comp is not None:
+                _save_img(out_sub / "complexity_map.png",
+                          ((1.0 - comp) * 255).astype(np.uint8), is_color=False)
+            writable = ml_result.get("writable")
+            if writable is not None:
+                _save_img(out_sub / "writable_mask.png",
+                          writable.astype(np.uint8) * 255, is_color=False)
+                combined = make_combined_mask(writable, ml_result.get("forb_mask",
+                                             np.zeros_like(writable)))
+                _save_img(out_sub / "combined_mask.png", combined)
 
         print(f"  -> {out_sub.name}", end="")
 
